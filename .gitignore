@@ -35,4 +35,11 @@ out/
 
 ### VS Code ###
 .vscode/
-docs
+
+
+docs/
+!docs/CODE_CONVENTIONS.md
+
+# Local secrets and certificates
+.env
+certs/

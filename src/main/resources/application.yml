@@ -1,0 +1,25 @@
+server:
+  port: ${PORT:8081}
+
+spring:
+  profiles:
+    default: local
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:notification/.env[.properties]
+
+jwt:
+  secret: ${JWT_SECRET:test-jwt-secret-for-tests}
+
+app:
+  vapid:
+    public-key: ${VAPID_PUBLIC_KEY:BCJqbgnMJBUSN4VChYAQ1XmHeCy1-dL8EXhr1urZw5pP-RUnIluVV-q3sbw7yUyAfSt24r9pzFjgpW-bia0b8lA}
+    private-key: ${VAPID_PRIVATE_KEY:UaO5mP8qEqr3KJsUFGIiwhFV09lpQAKbSDIQJQDKLhM}
+    subject: ${VAPID_SUBJECT:mailto:admin@apartment.com}
+  retention:
+    default-days: ${DEFAULT_RETENTION_DAYS:90}
+  kafka:
+    retry-backoff-ms: ${KAFKA_RETRY_BACKOFF_MS:1000}
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}

@@ -1,0 +1,205 @@
+package com.alphatragen.notification.consumer;
+
+import com.alphatragen.notification.domain.Notification;
+import com.alphatragen.notification.domain.NotificationEventType;
+import com.alphatragen.notification.domain.NotificationTargetType;
+import com.alphatragen.notification.dto.NotificationEventDto;
+import com.alphatragen.notification.repository.NotificationRepository;
+import com.alphatragen.notification.service.NotificationApplicationService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+@SpringBootTest
+@Testcontainers
+@ActiveProfiles("test")
+@DirtiesContext
+public class NotificationEventConsumerTest {
+
+    @Container
+    static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.0"))
+            .withEnv("KAFKA_HEAP_OPTS", "-Xms128M -Xmx256M")
+            .withStartupTimeout(Duration.ofMinutes(5));
+
+    @DynamicPropertySource
+    static void overrideProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.kafka.listener.auto-startup", () -> "true");
+        // Ensure retry backoff is small for testing
+        registry.add("app.kafka.retry-backoff-ms", () -> "100");
+    }
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private com.alphatragen.notification.repository.PushSubscriptionRepository pushSubscriptionRepository;
+
+    @MockitoSpyBean
+    private NotificationApplicationService notificationApplicationService;
+
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
+    @BeforeEach
+    void setUp() {
+        notificationRepository.deleteAll();
+        pushSubscriptionRepository.deleteAll();
+    }
+
+    @Test
+    void testConsumeNormalMessage_Success() throws Exception {
+        String eventId = UUID.randomUUID().toString();
+        NotificationEventDto dto = new NotificationEventDto(
+                eventId,
+                NotificationEventType.COMPLAINT_STATUS_CHANGED,
+                LocalDateTime.now(),
+                1L,
+                NotificationTargetType.INDIVIDUAL
+        );
+        dto.setUserId(100L);
+        dto.setTemplateData(Map.of("status", "RESOLVED"));
+        dto.setActionUrl("/complaints/1");
+
+        kafkaTemplate.send("notification-events", eventId, dto);
+
+        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+            Optional<Notification> opt = notificationRepository.findByEventId(eventId);
+            assertThat(opt).isPresent();
+            assertThat(opt.get().getTitle()).contains("민원 처리 상태");
+        });
+    }
+
+    @Test
+    void testConsumeInvalidMessage_ShouldNotCreateNotification() throws Exception {
+        String eventId = UUID.randomUUID().toString();
+        // Invalid DTO: missing occurredAt or invalid targetType specific fields
+        NotificationEventDto dto = new NotificationEventDto(
+                eventId,
+                NotificationEventType.COMPLAINT_STATUS_CHANGED,
+                null, // missing occurredAt
+                1L,
+                NotificationTargetType.INDIVIDUAL
+        );
+
+        kafkaTemplate.send("notification-events", eventId, dto);
+
+        // Sleep to ensure it had time to be processed and skipped/failed
+        Thread.sleep(2000);
+
+        Optional<Notification> opt = notificationRepository.findByEventId(eventId);
+        assertThat(opt).isEmpty();
+    }
+
+    @Test
+    void testDuplicateEvent_ShouldIgnoreSecondExecution() throws Exception {
+        String eventId = UUID.randomUUID().toString();
+        NotificationEventDto dto = new NotificationEventDto(
+                eventId,
+                NotificationEventType.URGENT_NOTICE,
+                LocalDateTime.now(),
+                1L,
+                NotificationTargetType.APARTMENT
+        );
+        dto.setTemplateData(Map.of("noticeTitle", "Urgent Maintenance", "noticeContent", "Water shutdown"));
+
+        // Send duplicate messages
+        kafkaTemplate.send("notification-events", eventId, dto);
+        kafkaTemplate.send("notification-events", eventId, dto);
+
+        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+            Optional<Notification> opt = notificationRepository.findByEventId(eventId);
+            assertThat(opt).isPresent();
+        });
+
+        // Let's check that verify on service call wait or sleep
+        Thread.sleep(2000);
+
+        // Even if received twice, idempotency protects and doesn't throw or duplicate
+        long count = notificationRepository.count();
+        assertThat(count).isEqualTo(1);
+    }
+
+    @Test
+    void testRetryPolicy_MaxThreeAttempts() throws Exception {
+        String eventId = UUID.randomUUID().toString();
+        NotificationEventDto dto = new NotificationEventDto(
+                eventId,
+                NotificationEventType.COMPLAINT_STATUS_CHANGED,
+                LocalDateTime.now(),
+                1L,
+                NotificationTargetType.INDIVIDUAL
+        );
+        dto.setUserId(100L);
+        dto.setTemplateData(Map.of("status", "RESOLVED"));
+
+        // Make the service fail intentionally to test retries
+        Mockito.doThrow(new RuntimeException("Simulated Transient DB Error"))
+                .when(notificationApplicationService).createNotification(any(NotificationEventDto.class));
+
+        kafkaTemplate.send("notification-events", eventId, dto);
+
+        // The service should be invoked exactly 3 times (1 initial + 2 retries)
+        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+            verify(notificationApplicationService, times(3)).createNotification(any(NotificationEventDto.class));
+        });
+    }
+
+    @Test
+    void testConsumeUserWithdrawal_DeactivatesSubscriptions() throws Exception {
+        String eventId = UUID.randomUUID().toString();
+        
+        // Save initial subscription
+        com.alphatragen.notification.domain.PushSubscription sub = new com.alphatragen.notification.domain.PushSubscription();
+        sub.setUserId(100L);
+        sub.setApartmentId(1L);
+        sub.setEndpoint("https://fcm.googleapis.com/fcm/send/withdraw-test");
+        sub.setP256dh("p256");
+        sub.setAuth("auth");
+        sub.setActive(true);
+        pushSubscriptionRepository.save(sub);
+        
+        NotificationEventDto dto = new NotificationEventDto(
+                eventId,
+                NotificationEventType.USER_WITHDRAWAL,
+                LocalDateTime.now(),
+                1L,
+                NotificationTargetType.INDIVIDUAL
+        );
+        dto.setUserId(100L);
+
+        kafkaTemplate.send("notification-events", eventId, dto);
+
+        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+            var subs = pushSubscriptionRepository.findByUserId(100L);
+            assertThat(subs).isNotEmpty();
+            assertThat(subs.get(0).isActive()).isFalse();
+        });
+    }
+}

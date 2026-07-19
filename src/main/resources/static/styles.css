@@ -1,0 +1,17 @@
+:root { font-family: system-ui, sans-serif; color: #172033; background: #f8fafc; }
+* { box-sizing: border-box; } body { margin: 0; } button, select { font: inherit; }
+.shell { max-width: 760px; margin: 0 auto; padding: 32px 20px 56px; }
+.header, .toolbar, .permission, .notification-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.eyebrow { color: #2563eb; font-size: 12px; font-weight: 700; letter-spacing: .12em; margin: 0 0 6px; }
+h1 { margin: 0 0 24px; font-size: 32px; } .count { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 7px; border-radius: 999px; color: white; background: #ef4444; font-size: 14px; vertical-align: middle; } h2 { margin: 0 0 6px; font-size: 18px; } p { margin: 0; color: #64748b; }
+.card, .notification { background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px #0f172a0a; }
+.permission { margin-bottom: 16px; border-color: #bfdbfe; background: #eff6ff; } .permission p { color: #475569; }
+button { cursor: pointer; border: 0; border-radius: 9px; padding: 10px 14px; color: white; background: #2563eb; font-weight: 700; }
+button.secondary { color: #334155; background: #e2e8f0; } button:disabled { cursor: wait; opacity: .55; }
+.toolbar { margin-bottom: 16px; } select { margin-left: 8px; border: 1px solid #cbd5e1; border-radius: 7px; padding: 7px; }
+.status { min-height: 24px; margin: 12px 2px; font-size: 14px; } .notifications { display: grid; gap: 10px; }
+.notification { cursor: pointer; } .notification.unread { border-left: 4px solid #2563eb; } .notification.urgent { border-color: #f59e0b; }
+.notification h3 { margin: 0; font-size: 16px; } .notification time { color: #94a3b8; font-size: 12px; } .notification-body { display: none; margin-top: 10px; white-space: pre-wrap; line-height: 1.5; }
+.notification.expanded .notification-body { display: block; } .notification-actions { margin-top: 12px; } .notification-actions a { color: #2563eb; font-weight: 700; }
+.more { display: block; margin: 18px auto 0; } .more[hidden] { display: none; }
+@media (max-width: 520px) { .shell { padding: 24px 14px; } .permission { align-items: flex-start; flex-direction: column; } }
