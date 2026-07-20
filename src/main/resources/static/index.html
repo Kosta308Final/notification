@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+  <title>알림 센터</title>
+</head>
+<body>
+  <main class="shell">
+    <header class="header">
+      <div><p class="eyebrow">NOTIFICATION CENTER</p><h1>알림 센터 <span id="unread-count" class="count" aria-label="읽지 않은 알림 수">0</span></h1></div>
+      <button id="logout" class="secondary">로그아웃</button>
+    </header>
+    <section id="permission" class="card permission" hidden>
+      <div><h2>새 알림을 받아보세요</h2><p id="permission-text">브라우저 알림 권한을 허용하면 중요한 알림을 바로 확인할 수 있습니다.</p></div>
+      <button id="enable-push">알림 켜기</button>
+    </section>
+    <section class="toolbar card">
+      <label>보기 <select id="filter"><option value="">전체</option><option value="false">읽지 않음</option><option value="true">읽음</option></select></label>
+      <button id="read-all" class="secondary">모두 읽음</button>
+    </section>
+    <p id="status" class="status" role="status"></p>
+    <section id="notifications" class="notifications" aria-live="polite"></section>
+    <button id="more" class="secondary more">더 보기</button>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>
