@@ -1,8 +1,8 @@
 package com.alphatragen.notification.consumer;
 
 import com.alphatragen.notification.dto.NotificationEventDto;
+import com.alphatragen.notification.application.NotificationEventHandler;
 import com.alphatragen.notification.domain.NotificationEventType;
-import com.alphatragen.notification.service.NotificationApplicationService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -21,16 +21,13 @@ public class NotificationEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationEventConsumer.class);
 
-    private final NotificationApplicationService notificationApplicationService;
-    private final com.alphatragen.notification.service.PushSubscriptionService pushSubscriptionService;
+    private final NotificationEventHandler notificationEventHandler;
     private final ObjectMapper objectMapper;
 
     public NotificationEventConsumer(
-            NotificationApplicationService notificationApplicationService,
-            com.alphatragen.notification.service.PushSubscriptionService pushSubscriptionService,
+            NotificationEventHandler notificationEventHandler,
             ObjectMapper objectMapper) {
-        this.notificationApplicationService = notificationApplicationService;
-        this.pushSubscriptionService = pushSubscriptionService;
+        this.notificationEventHandler = notificationEventHandler;
         this.objectMapper = objectMapper;
     }
 
@@ -53,12 +50,7 @@ public class NotificationEventConsumer {
         }
         log.info("Received notification event message: eventId={}, eventType={}", eventDto.getEventId(), eventDto.getEventType());
         try {
-            if (eventDto.getEventType() == NotificationEventType.USER_WITHDRAWAL) {
-                eventDto.validateTargetSpecificFields();
-                pushSubscriptionService.deactivateSubscriptionByWithdrawal(eventDto.getUserId());
-            } else {
-                notificationApplicationService.createNotification(eventDto);
-            }
+            notificationEventHandler.handle(eventDto);
             log.info("Successfully processed notification event: eventId={}", eventDto.getEventId());
         } catch (IllegalArgumentException e) {
             // Fatal validation errors should be caught and logged, not retried
