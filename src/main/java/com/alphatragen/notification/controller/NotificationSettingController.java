@@ -1,7 +1,7 @@
 package com.alphatragen.notification.controller;
 
-import com.alphatragen.notification.dto.NotificationSettingResponseDto;
-import com.alphatragen.notification.dto.NotificationSettingUpdateRequestDto;
+import com.alphatragen.notification.dto.NotificationSettingRespDto;
+import com.alphatragen.notification.dto.NotificationSettingUpdateReqDto;
 import com.alphatragen.notification.service.NotificationSettingService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -18,13 +18,13 @@ public class NotificationSettingController {
     }
 
     @GetMapping
-    public NotificationSettingResponseDto get(Authentication authentication) {
+    public NotificationSettingRespDto get(Authentication authentication) {
         return service.get(JwtUserClaims.from(authentication).apartmentId());
     }
 
     @PutMapping
-    public NotificationSettingResponseDto update(
-            @Valid @RequestBody NotificationSettingUpdateRequestDto request,
+    public NotificationSettingRespDto update(
+            @Valid @RequestBody NotificationSettingUpdateReqDto request,
             Authentication authentication) {
         JwtUserClaims claims = JwtUserClaims.from(authentication);
         return service.update(claims.apartmentId(), request.retentionDays(), claims.userId(), claims.apartmentId(), String.join(",", claims.roles()));

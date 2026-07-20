@@ -96,3 +96,4 @@
   - Configured test profiles and added the consumer deserialization config in `application.yaml` to ensure Spring Boot's Testcontainers Kafka consumer tests compile and execute cleanly.
   - Wrote comprehensive TDD unit tests in `VapidConfigTest.java` and `WebPushSenderTest.java` validating correct initialization, missing config handling, active subscription matching, failure isolation, and expired endpoint deactivation.
   - All test suites execute and compile successfully. Marked Phase 9 tasks as complete.
+2026-07-20 12 - Added Kafka consumer normalization for main-service notification JSON events, including nested recipients, offset timestamps, event aliases, and string-based deserialization.

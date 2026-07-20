@@ -1,9 +1,9 @@
 package com.alphatragen.notification.service;
 
 import com.alphatragen.notification.domain.*;
-import com.alphatragen.notification.dto.ManualNotificationRequestDto;
-import com.alphatragen.notification.dto.RecipientPreviewResponseDto;
-import com.alphatragen.notification.dto.AdminNotificationResponseDto;
+import com.alphatragen.notification.dto.ManualNotificationReqDto;
+import com.alphatragen.notification.dto.RecipientPreviewRespDto;
+import com.alphatragen.notification.dto.AdminNotificationRespDto;
 import com.alphatragen.notification.event.NotificationCreatedEvent;
 import com.alphatragen.notification.repository.NotificationRepository;
 import com.alphatragen.notification.repository.NotificationSettingRepository;
@@ -42,23 +42,23 @@ public class NotificationAdminService {
         this.eventPublisher = eventPublisher;
     }
 
-    public RecipientPreviewResponseDto preview(ManualNotificationRequestDto request, Long adminApartmentId, String roles) {
+    public RecipientPreviewRespDto preview(ManualNotificationReqDto request, Long adminApartmentId, String roles) {
         authorize(request.getApartmentId(), adminApartmentId, roles);
         request.validateTargetSpecificFields();
         List<Long> ids = resolve(request);
         log.info("notification_recipient_preview apartmentId={} recipientCount={}", request.getApartmentId(), ids.size());
-        return new RecipientPreviewResponseDto(ids.size(), ids);
+        return new RecipientPreviewRespDto(ids.size(), ids);
     }
 
     @Transactional(readOnly = true)
-    public Page<AdminNotificationResponseDto> getHistory(Long adminApartmentId, String roles, Pageable pageable) {
+    public Page<AdminNotificationRespDto> getHistory(Long adminApartmentId, String roles, Pageable pageable) {
         authorize(adminApartmentId, adminApartmentId, roles);
         return notificationRepository.findAdminHistory(adminApartmentId, pageable)
-                .map(AdminNotificationResponseDto::new);
+                .map(AdminNotificationRespDto::new);
     }
 
     @Transactional
-    public Notification send(ManualNotificationRequestDto request, Long adminUserId, Long adminApartmentId, String roles) {
+    public Notification send(ManualNotificationReqDto request, Long adminUserId, Long adminApartmentId, String roles) {
         authorize(request.getApartmentId(), adminApartmentId, roles);
         request.validateForSend();
         List<Long> ids = resolve(request);
@@ -97,7 +97,7 @@ public class NotificationAdminService {
         return saved;
     }
 
-    private List<Long> resolve(ManualNotificationRequestDto request) {
+    private List<Long> resolve(ManualNotificationReqDto request) {
         return resolver.resolveTargets(request.getTargetType(), request.getApartmentId(), request.getUserId(), request.getBuilding(), request.getUnit(), request.getRole());
     }
 

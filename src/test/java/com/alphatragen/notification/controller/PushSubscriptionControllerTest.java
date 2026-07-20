@@ -1,7 +1,7 @@
 package com.alphatragen.notification.controller;
 
-import com.alphatragen.notification.dto.PushSubscriptionRequestDto;
-import com.alphatragen.notification.dto.PushUnsubscribeRequestDto;
+import com.alphatragen.notification.dto.PushSubscriptionReqDto;
+import com.alphatragen.notification.dto.PushUnsubscribeReqDto;
 import com.alphatragen.notification.service.PushSubscriptionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ class PushSubscriptionControllerTest {
         // Given
         Long userId = 1L;
         Long apartmentId = 10L;
-        PushSubscriptionRequestDto requestDto = new PushSubscriptionRequestDto(
+        PushSubscriptionReqDto requestDto = new PushSubscriptionReqDto(
                 "https://fcm.googleapis.com/fcm/send/1", "p256dhKey", "authKey", "Chrome", "Mobile"
         );
 
@@ -41,7 +41,7 @@ class PushSubscriptionControllerTest {
     void testDeactivate() {
         // Given
         Long userId = 1L;
-        PushUnsubscribeRequestDto requestDto = new PushUnsubscribeRequestDto("https://fcm.googleapis.com/fcm/send/1");
+        PushUnsubscribeReqDto requestDto = new PushUnsubscribeReqDto("https://fcm.googleapis.com/fcm/send/1");
 
         // When
         controller.deactivate(userId, requestDto);

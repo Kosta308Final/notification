@@ -1,5 +1,6 @@
 package com.alphatragen.notification.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,6 +13,7 @@ public class NotificationTarget {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "notification_id", nullable = false)
+    @JsonIgnore
     private Notification notification;
 
     @Enumerated(EnumType.STRING)

@@ -1,7 +1,7 @@
 package com.alphatragen.notification.controller;
 
 import com.alphatragen.notification.domain.*;
-import com.alphatragen.notification.dto.NotificationResponseDto;
+import com.alphatragen.notification.dto.NotificationRespDto;
 import com.alphatragen.notification.service.NotificationUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ class NotificationControllerTest {
         when(userService.getNotifications(userId, apartmentId, null, pageable)).thenReturn(page);
 
         // When
-        Page<NotificationResponseDto> result = controller.getNotifications(userId, apartmentId, null, 0, 20);
+        Page<NotificationRespDto> result = controller.getNotifications(userId, apartmentId, null, 0, 20);
 
         // Then
         assertEquals(1, result.getTotalElements());

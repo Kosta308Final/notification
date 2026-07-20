@@ -4,7 +4,7 @@ import com.alphatragen.notification.domain.NotificationImportance;
 import com.alphatragen.notification.domain.NotificationRecipient;
 import java.time.LocalDateTime;
 
-public class NotificationResponseDto {
+public class NotificationRespDto {
     private Long id;
     private String title;
     private String content;
@@ -13,10 +13,10 @@ public class NotificationResponseDto {
     private LocalDateTime createdAt;
     private String actionUrl;
 
-    public NotificationResponseDto() {
+    public NotificationRespDto() {
     }
 
-    public NotificationResponseDto(NotificationRecipient recipient) {
+    public NotificationRespDto(NotificationRecipient recipient) {
         this.id = recipient.getId();
         this.title = recipient.getNotification().getTitle();
         this.content = recipient.getNotification().getContent();

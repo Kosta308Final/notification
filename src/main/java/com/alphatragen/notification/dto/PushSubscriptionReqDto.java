@@ -2,7 +2,7 @@ package com.alphatragen.notification.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class PushSubscriptionRequestDto {
+public class PushSubscriptionReqDto {
 
     @NotBlank(message = "endpoint is required")
     private String endpoint;
@@ -16,10 +16,10 @@ public class PushSubscriptionRequestDto {
     private String browser;
     private String deviceType;
 
-    public PushSubscriptionRequestDto() {
+    public PushSubscriptionReqDto() {
     }
 
-    public PushSubscriptionRequestDto(String endpoint, String p256dh, String auth, String browser, String deviceType) {
+    public PushSubscriptionReqDto(String endpoint, String p256dh, String auth, String browser, String deviceType) {
         this.endpoint = endpoint;
         this.p256dh = p256dh;
         this.auth = auth;

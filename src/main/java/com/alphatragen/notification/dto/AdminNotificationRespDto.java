@@ -7,7 +7,7 @@ import com.alphatragen.notification.domain.NotificationTargetType;
 
 import java.time.LocalDateTime;
 
-public class AdminNotificationResponseDto {
+public class AdminNotificationRespDto {
     private Long id;
     private String eventId;
     private String title;
@@ -20,7 +20,7 @@ public class AdminNotificationResponseDto {
     private NotificationTargetType targetType;
     private int recipientCount;
 
-    public AdminNotificationResponseDto(Notification notification) {
+    public AdminNotificationRespDto(Notification notification) {
         this.id = notification.getId();
         this.eventId = notification.getEventId();
         this.title = notification.getTitle();

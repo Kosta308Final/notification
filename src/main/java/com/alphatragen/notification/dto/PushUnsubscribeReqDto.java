@@ -2,15 +2,15 @@ package com.alphatragen.notification.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class PushUnsubscribeRequestDto {
+public class PushUnsubscribeReqDto {
 
     @NotBlank(message = "endpoint is required")
     private String endpoint;
 
-    public PushUnsubscribeRequestDto() {
+    public PushUnsubscribeReqDto() {
     }
 
-    public PushUnsubscribeRequestDto(String endpoint) {
+    public PushUnsubscribeReqDto(String endpoint) {
         this.endpoint = endpoint;
     }
 

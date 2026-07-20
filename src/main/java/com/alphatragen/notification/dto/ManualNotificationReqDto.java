@@ -2,11 +2,10 @@ package com.alphatragen.notification.dto;
 
 import com.alphatragen.notification.domain.NotificationImportance;
 import com.alphatragen.notification.domain.NotificationTargetType;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
-public class ManualNotificationRequestDto {
+public class ManualNotificationReqDto {
     @NotNull private Long apartmentId;
     @NotNull private NotificationTargetType targetType;
     private Long userId;

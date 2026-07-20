@@ -1,7 +1,7 @@
 package com.alphatragen.notification.service;
 
 import com.alphatragen.notification.domain.NotificationSetting;
-import com.alphatragen.notification.dto.NotificationSettingResponseDto;
+import com.alphatragen.notification.dto.NotificationSettingRespDto;
 import com.alphatragen.notification.repository.NotificationSettingRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class NotificationSettingService {
     }
 
     @Transactional(readOnly = true)
-    public NotificationSettingResponseDto get(Long apartmentId) {
+    public NotificationSettingRespDto get(Long apartmentId) {
         if (apartmentId == null) throw new IllegalArgumentException("apartmentId is required");
         NotificationSetting setting = repository.findByApartmentId(apartmentId).orElseGet(() -> {
             NotificationSetting defaultSetting = new NotificationSetting();
@@ -28,12 +28,12 @@ public class NotificationSettingService {
             defaultSetting.setRetentionDays(DEFAULT_RETENTION_DAYS);
             return defaultSetting;
         });
-        return NotificationSettingResponseDto.from(setting);
+        return NotificationSettingRespDto.from(setting);
     }
 
     @Transactional
-    public NotificationSettingResponseDto update(Long apartmentId, int retentionDays, Long adminUserId,
-                                                  Long adminApartmentId, String roles) {
+    public NotificationSettingRespDto update(Long apartmentId, int retentionDays, Long adminUserId,
+                                             Long adminApartmentId, String roles) {
         authorize(apartmentId, adminApartmentId, roles);
         if (retentionDays < 30 || retentionDays > 365) {
             throw new IllegalArgumentException("retentionDays must be between 30 and 365 days");
@@ -46,7 +46,7 @@ public class NotificationSettingService {
         setting.setRetentionDays(retentionDays);
         setting.setUpdatedBy(adminUserId);
         setting.setUpdatedAt(LocalDateTime.now());
-        return NotificationSettingResponseDto.from(repository.save(setting));
+        return NotificationSettingRespDto.from(repository.save(setting));
     }
 
     private void authorize(Long requestedApartmentId, Long adminApartmentId, String roles) {

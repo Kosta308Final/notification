@@ -23,6 +23,12 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final ObjectMapper objectMapper;
+
+    public SecurityConfig(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     @Value("${jwt.secret}")
     private String jwtSecret;
 
@@ -48,7 +54,7 @@ public class SecurityConfig {
     private void writeSecurityError(jakarta.servlet.http.HttpServletResponse response, String path, int status, String code, String message) throws java.io.IOException {
         response.setStatus(status);
         response.setContentType("application/json;charset=UTF-8");
-        new ObjectMapper().writeValue(response.getWriter(), new ApiErrorResponse(Instant.now(), status, code, message, path));
+        objectMapper.writeValue(response.getWriter(), new ApiErrorResponse(Instant.now(), status, code, message, path));
     }
 
     @Bean

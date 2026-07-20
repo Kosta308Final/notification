@@ -1,7 +1,7 @@
 package com.alphatragen.notification.controller;
 
-import com.alphatragen.notification.dto.PushSubscriptionRequestDto;
-import com.alphatragen.notification.dto.PushUnsubscribeRequestDto;
+import com.alphatragen.notification.dto.PushSubscriptionReqDto;
+import com.alphatragen.notification.dto.PushUnsubscribeReqDto;
 import com.alphatragen.notification.service.PushSubscriptionService;
 import com.alphatragen.notification.config.VapidConfig;
 import jakarta.validation.Valid;
@@ -39,7 +39,7 @@ public class PushSubscriptionController {
     @ResponseStatus(HttpStatus.CREATED)
     public void subscribeAuthenticated(
             Authentication authentication,
-            @Valid @RequestBody PushSubscriptionRequestDto requestDto) {
+            @Valid @RequestBody PushSubscriptionReqDto requestDto) {
         JwtUserClaims claims = JwtUserClaims.from(authentication);
         subscriptionService.subscribe(
                 claims.userId(), claims.apartmentId(),
@@ -55,12 +55,12 @@ public class PushSubscriptionController {
     @ResponseStatus(HttpStatus.OK)
     public void deactivateAuthenticated(
             Authentication authentication,
-            @Valid @RequestBody PushUnsubscribeRequestDto requestDto) {
+            @Valid @RequestBody PushUnsubscribeReqDto requestDto) {
         subscriptionService.unsubscribe(JwtUserClaims.from(authentication).userId(), requestDto.getEndpoint());
     }
 
-    public void subscribe(Long userId, Long apartmentId, PushSubscriptionRequestDto requestDto) {
+    public void subscribe(Long userId, Long apartmentId, PushSubscriptionReqDto requestDto) {
         subscriptionService.subscribe(userId, apartmentId, requestDto.getEndpoint(), requestDto.getP256dh(), requestDto.getAuth(), requestDto.getBrowser(), requestDto.getDeviceType());
     }
-    public void deactivate(Long userId, PushUnsubscribeRequestDto requestDto) { subscriptionService.unsubscribe(userId, requestDto.getEndpoint()); }
+    public void deactivate(Long userId, PushUnsubscribeReqDto requestDto) { subscriptionService.unsubscribe(userId, requestDto.getEndpoint()); }
 }
