@@ -4,12 +4,12 @@ import com.alphatragen.notification.dto.PushSubscriptionReqDto;
 import com.alphatragen.notification.dto.PushUnsubscribeReqDto;
 import com.alphatragen.notification.service.PushSubscriptionService;
 import com.alphatragen.notification.config.VapidConfig;
+import com.alphatragen.notification.security.CurrentUser;
+import com.alphatragen.notification.security.JwtUserClaims;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.alphatragen.notification.security.JwtUserClaims;
 import java.util.Map;
 
 @RestController
@@ -27,7 +27,8 @@ public class PushSubscriptionController {
 
     /** 기존 단위 테스트와 서비스 내부 호출을 위한 생성자입니다. */
     public PushSubscriptionController(PushSubscriptionService subscriptionService) {
-        this(subscriptionService, new VapidConfig());
+        this.subscriptionService = subscriptionService;
+        this.vapidConfig = null;
     }
 
     @GetMapping("/vapid-public-key")
@@ -38,9 +39,8 @@ public class PushSubscriptionController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void subscribeAuthenticated(
-            Authentication authentication,
+            @CurrentUser JwtUserClaims claims,
             @Valid @RequestBody PushSubscriptionReqDto requestDto) {
-        JwtUserClaims claims = JwtUserClaims.from(authentication);
         subscriptionService.subscribe(
                 claims.userId(), claims.apartmentId(),
                 requestDto.endpoint(),
@@ -54,9 +54,9 @@ public class PushSubscriptionController {
     @PostMapping("/deactivate")
     @ResponseStatus(HttpStatus.OK)
     public void deactivateAuthenticated(
-            Authentication authentication,
+            @CurrentUser JwtUserClaims claims,
             @Valid @RequestBody PushUnsubscribeReqDto requestDto) {
-        subscriptionService.unsubscribe(JwtUserClaims.from(authentication).userId(), requestDto.endpoint());
+        subscriptionService.unsubscribe(claims.userId(), requestDto.endpoint());
     }
 
     public void subscribe(Long userId, Long apartmentId, PushSubscriptionReqDto requestDto) {

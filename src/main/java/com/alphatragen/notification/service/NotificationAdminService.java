@@ -1,6 +1,7 @@
 package com.alphatragen.notification.service;
 
-import com.alphatragen.notification.domain.*;
+import com.alphatragen.notification.domain.Notification;
+import com.alphatragen.notification.domain.NotificationSetting;
 import com.alphatragen.notification.dto.ManualNotificationReqDto;
 import com.alphatragen.notification.dto.RecipientPreviewRespDto;
 import com.alphatragen.notification.dto.AdminNotificationRespDto;
@@ -8,6 +9,7 @@ import com.alphatragen.notification.event.NotificationCreatedEvent;
 import com.alphatragen.notification.repository.NotificationRepository;
 import com.alphatragen.notification.repository.NotificationSettingRepository;
 import com.alphatragen.notification.resolver.NotificationTargetResolverComposite;
+import com.alphatragen.notification.resolver.TargetCondition;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,10 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class NotificationAdminService {
@@ -30,15 +29,21 @@ public class NotificationAdminService {
     private final NotificationTargetResolverComposite resolver;
     private final NotificationRepository notificationRepository;
     private final NotificationSettingRepository settingRepository;
+    private final NotificationFactory notificationFactory;
+    private final NotificationRecipientCreator notificationRecipientCreator;
     private final ApplicationEventPublisher eventPublisher;
 
     public NotificationAdminService(NotificationTargetResolverComposite resolver,
                                     NotificationRepository notificationRepository,
                                     NotificationSettingRepository settingRepository,
+                                    NotificationFactory notificationFactory,
+                                    NotificationRecipientCreator notificationRecipientCreator,
                                     ApplicationEventPublisher eventPublisher) {
         this.resolver = resolver;
         this.notificationRepository = notificationRepository;
         this.settingRepository = settingRepository;
+        this.notificationFactory = notificationFactory;
+        this.notificationRecipientCreator = notificationRecipientCreator;
         this.eventPublisher = eventPublisher;
     }
 
@@ -65,31 +70,8 @@ public class NotificationAdminService {
         int retentionDays = request.retentionDays() != null ? request.retentionDays()
                 : settingRepository.findByApartmentId(request.apartmentId()).map(NotificationSetting::getRetentionDays).orElse(DEFAULT_RETENTION_DAYS);
 
-        Notification notification = new Notification();
-        notification.setEventId("MANUAL-" + UUID.randomUUID());
-        notification.setImportance(request.importance());
-        notification.setSourceType(NotificationSourceType.OFFICE_MANUAL);
-        notification.setCreatedBy(adminUserId);
-        notification.setTitle(request.title());
-        notification.setContent(request.content());
-        notification.setActionUrl(request.actionUrl());
-        LocalDateTime createdAt = LocalDateTime.now();
-        notification.setCreatedAt(createdAt);
-        notification.setRetentionUntil(createdAt.plusDays(retentionDays));
-
-        NotificationTarget target = new NotificationTarget();
-        target.setNotification(notification);
-        target.setTargetType(request.targetType());
-        target.setApartmentId(request.apartmentId());
-        target.setUserId(request.userId());
-        target.setBuilding(request.building());
-        target.setUnit(request.unit());
-        target.setRole(request.role());
-        notification.getTargets().add(target);
-
-        List<NotificationRecipient> recipients = new ArrayList<>();
-        ids.forEach(id -> { NotificationRecipient recipient = new NotificationRecipient(); recipient.setNotification(notification); recipient.setRecipientUserId(id); recipients.add(recipient); });
-        notification.setRecipients(recipients);
+        Notification notification = notificationFactory.createManual(request, adminUserId, retentionDays);
+        notificationRecipientCreator.create(notification, ids);
         Notification saved = notificationRepository.save(notification);
         log.info("notification_manual_created eventId={} apartmentId={} adminUserId={} recipientCount={}",
                 saved.getEventId(), request.apartmentId(), adminUserId, ids.size());
@@ -98,7 +80,14 @@ public class NotificationAdminService {
     }
 
     private List<Long> resolve(ManualNotificationReqDto request) {
-        return resolver.resolveTargets(request.targetType(), request.apartmentId(), request.userId(), request.building(), request.unit(), request.role());
+        return resolver.resolveTargets(new TargetCondition(
+                request.targetType(),
+                request.apartmentId(),
+                request.userId(),
+                request.building(),
+                request.unit(),
+                request.role()
+        ));
     }
 
     private void authorize(Long requestedApartmentId, Long adminApartmentId, String roles) {

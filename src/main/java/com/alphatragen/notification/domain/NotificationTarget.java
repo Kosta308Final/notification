@@ -2,9 +2,21 @@ package com.alphatragen.notification.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+/**
+ * 알림이 전달될 대상 조건을 저장하는 엔티티입니다.
+ *
+ * notification_target 테이블에 아파트, 사용자, 동·호수, 역할 등의 대상 조건을 저장하고,
+ * notification_id 외래 키로 하나의 Notification에 연결됩니다.
+ */
 @Entity
 @Table(name = "notification_target")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationTarget {
 
     @Id
@@ -35,70 +47,20 @@ public class NotificationTarget {
     @Column(name = "role", length = 50)
     private String role;
 
-    public NotificationTarget() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
+    @Builder
+    private NotificationTarget(Long id, Notification notification, NotificationTargetType targetType, Long apartmentId,
+                               Long userId, String building, String unit, String role) {
         this.id = id;
-    }
-
-    public Notification getNotification() {
-        return notification;
-    }
-
-    public void setNotification(Notification notification) {
         this.notification = notification;
-    }
-
-    public NotificationTargetType getTargetType() {
-        return targetType;
-    }
-
-    public void setTargetType(NotificationTargetType targetType) {
         this.targetType = targetType;
-    }
-
-    public Long getApartmentId() {
-        return apartmentId;
-    }
-
-    public void setApartmentId(Long apartmentId) {
         this.apartmentId = apartmentId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
         this.userId = userId;
-    }
-
-    public String getBuilding() {
-        return building;
-    }
-
-    public void setBuilding(String building) {
         this.building = building;
-    }
-
-    public String getUnit() {
-        return unit;
-    }
-
-    public void setUnit(String unit) {
         this.unit = unit;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
         this.role = role;
+    }
+
+    void assignNotification(Notification notification) {
+        this.notification = notification;
     }
 }

@@ -19,12 +19,12 @@ import static org.mockito.Mockito.*;
 class NotificationControllerTest {
 
     private NotificationUserService userService;
-    private NotificationController controller;
+    private InternalNotificationController controller;
 
     @BeforeEach
     void setUp() {
         userService = mock(NotificationUserService.class);
-        controller = new NotificationController(userService);
+        controller = new InternalNotificationController(userService);
     }
 
     @Test
@@ -34,18 +34,20 @@ class NotificationControllerTest {
         Long apartmentId = 10L;
         Pageable pageable = PageRequest.of(0, 20);
 
-        Notification n = new Notification();
-        n.setTitle("Title");
-        n.setContent("Content");
-        n.setImportance(NotificationImportance.NORMAL);
-        n.setCreatedAt(LocalDateTime.now());
-        n.setActionUrl("/path");
+        Notification n = Notification.builder()
+                .title("Title")
+                .content("Content")
+                .importance(NotificationImportance.NORMAL)
+                .createdAt(LocalDateTime.now())
+                .actionUrl("/path")
+                .build();
 
-        NotificationRecipient r = new NotificationRecipient();
-        r.setId(1L);
-        r.setNotification(n);
-        r.setRecipientUserId(userId);
-        r.setRead(false);
+        NotificationRecipient r = NotificationRecipient.builder()
+                .id(1L)
+                .notification(n)
+                .recipientUserId(userId)
+                .read(false)
+                .build();
 
         Page<NotificationRecipient> page = new PageImpl<>(List.of(r), pageable, 1);
         when(userService.getNotifications(userId, apartmentId, null, pageable)).thenReturn(page);

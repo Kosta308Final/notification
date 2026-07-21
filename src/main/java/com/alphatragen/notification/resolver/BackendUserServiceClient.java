@@ -1,7 +1,7 @@
 package com.alphatragen.notification.resolver;
 
+import com.alphatragen.notification.config.NotificationProperties;
 import com.alphatragen.notification.domain.NotificationTargetType;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -20,53 +20,47 @@ public class BackendUserServiceClient implements UserServiceClient {
 
     public BackendUserServiceClient(
             RestClient.Builder restClientBuilder,
-            @Value("${app.backend.base-url:http://localhost:8080}") String baseUrl,
-            @Value("${app.backend.internal-token:local-notification-service-token}") String internalToken) {
-        this.restClient = restClientBuilder.baseUrl(baseUrl).build();
-        this.internalToken = internalToken;
+            NotificationProperties properties) {
+        NotificationProperties.Backend backend = properties.backend();
+        this.restClient = restClientBuilder.baseUrl(backend.baseUrl()).build();
+        this.internalToken = backend.internalToken();
     }
 
     @Override
     public List<Long> findUsersByIndividual(Long apartmentId, Long userId) {
-        return find(apartmentId, NotificationTargetType.INDIVIDUAL, userId, null, null, null);
+        return find(new TargetCondition(NotificationTargetType.INDIVIDUAL, apartmentId, userId, null, null, null));
     }
 
     @Override
     public List<Long> findUsersByHousehold(Long apartmentId, String building, String unit) {
-        return find(apartmentId, NotificationTargetType.HOUSEHOLD, null, building, unit, null);
+        return find(new TargetCondition(NotificationTargetType.HOUSEHOLD, apartmentId, null, building, unit, null));
     }
 
     @Override
     public List<Long> findUsersByBuilding(Long apartmentId, String building) {
-        return find(apartmentId, NotificationTargetType.BUILDING, null, building, null, null);
+        return find(new TargetCondition(NotificationTargetType.BUILDING, apartmentId, null, building, null, null));
     }
 
     @Override
     public List<Long> findUsersByRole(Long apartmentId, String role) {
-        return find(apartmentId, NotificationTargetType.ROLE, null, null, null, role);
+        return find(new TargetCondition(NotificationTargetType.ROLE, apartmentId, null, null, null, role));
     }
 
     @Override
     public List<Long> findUsersByApartment(Long apartmentId) {
-        return find(apartmentId, NotificationTargetType.APARTMENT, null, null, null, null);
+        return find(new TargetCondition(NotificationTargetType.APARTMENT, apartmentId, null, null, null, null));
     }
 
-    private List<Long> find(
-            Long apartmentId,
-            NotificationTargetType targetType,
-            Long userId,
-            String building,
-            String unit,
-            String role) {
+    private List<Long> find(TargetCondition condition) {
         BackendApiResponse response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/internal/notification-recipients")
-                        .queryParam("apartmentId", apartmentId)
-                        .queryParam("targetType", targetType)
-                        .queryParamIfPresent("userId", java.util.Optional.ofNullable(userId))
-                        .queryParamIfPresent("building", java.util.Optional.ofNullable(building))
-                        .queryParamIfPresent("unit", java.util.Optional.ofNullable(unit))
-                        .queryParamIfPresent("role", java.util.Optional.ofNullable(role))
+                        .queryParam("apartmentId", condition.apartmentId())
+                        .queryParam("targetType", condition.targetType())
+                        .queryParamIfPresent("userId", java.util.Optional.ofNullable(condition.userId()))
+                        .queryParamIfPresent("building", java.util.Optional.ofNullable(condition.building()))
+                        .queryParamIfPresent("unit", java.util.Optional.ofNullable(condition.unit()))
+                        .queryParamIfPresent("role", java.util.Optional.ofNullable(condition.role()))
                         .build())
                 .header(TOKEN_HEADER, internalToken)
                 .retrieve()

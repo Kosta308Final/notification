@@ -23,10 +23,10 @@ public class NotificationSettingService {
     public NotificationSettingRespDto get(Long apartmentId) {
         if (apartmentId == null) throw new IllegalArgumentException("apartmentId is required");
         NotificationSetting setting = repository.findByApartmentId(apartmentId).orElseGet(() -> {
-            NotificationSetting defaultSetting = new NotificationSetting();
-            defaultSetting.setApartmentId(apartmentId);
-            defaultSetting.setRetentionDays(DEFAULT_RETENTION_DAYS);
-            return defaultSetting;
+            return NotificationSetting.builder()
+                    .apartmentId(apartmentId)
+                    .retentionDays(DEFAULT_RETENTION_DAYS)
+                    .build();
         });
         return NotificationSettingRespDto.from(setting);
     }
@@ -39,13 +39,11 @@ public class NotificationSettingService {
             throw new IllegalArgumentException("retentionDays must be between 30 and 365 days");
         }
         NotificationSetting setting = repository.findByApartmentId(apartmentId).orElseGet(() -> {
-            NotificationSetting created = new NotificationSetting();
-            created.setApartmentId(apartmentId);
-            return created;
+            return NotificationSetting.builder()
+                    .apartmentId(apartmentId)
+                    .build();
         });
-        setting.setRetentionDays(retentionDays);
-        setting.setUpdatedBy(adminUserId);
-        setting.setUpdatedAt(LocalDateTime.now());
+        setting.updateRetention(retentionDays, adminUserId, LocalDateTime.now());
         return NotificationSettingRespDto.from(repository.save(setting));
     }
 

@@ -4,9 +4,9 @@ import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Encoding;
 import nl.martijndwars.webpush.Notification;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
@@ -20,19 +20,17 @@ import org.apache.http.client.methods.HttpPost;
 import org.jose4j.lang.JoseException;
 
 @Configuration
+@EnableConfigurationProperties(NotificationProperties.class)
 public class VapidConfig {
 
-    @Value("${app.vapid.public-key:}")
-    private String publicKey;
+    private final NotificationProperties.Vapid vapid;
 
-    @Value("${app.vapid.private-key:}")
-    private String privateKey;
-
-    @Value("${app.vapid.subject:}")
-    private String subject;
+    public VapidConfig(NotificationProperties properties) {
+        this.vapid = properties.vapid();
+    }
 
     public String getPublicKey() {
-        return publicKey;
+        return vapid.publicKey();
     }
 
     @PostConstruct
@@ -44,13 +42,8 @@ public class VapidConfig {
 
     @Bean
     public PushService pushService() {
-        if (publicKey == null || publicKey.trim().isEmpty() ||
-            privateKey == null || privateKey.trim().isEmpty() ||
-            subject == null || subject.trim().isEmpty()) {
-            throw new IllegalArgumentException("VAPID configurations (public-key, private-key, subject) must not be empty");
-        }
         try {
-            return new FcmCompatiblePushService(publicKey, privateKey, subject);
+            return new FcmCompatiblePushService(vapid.publicKey(), vapid.privateKey(), vapid.subject());
         } catch (Exception e) {
             throw new IllegalStateException("Failed to initialize PushService with VAPID keys", e);
         }

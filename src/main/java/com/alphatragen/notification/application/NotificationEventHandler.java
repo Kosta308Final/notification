@@ -20,8 +20,7 @@ public class NotificationEventHandler {
     }
 
     public void handle(NotificationEventDto eventDto) {
-        if (eventDto.getEventType() == NotificationEventType.USER_WITHDRAWAL) {
-            eventDto.validateTargetSpecificFields();
+        if (eventDto.getEventType() == NotificationEventType.USER_WITHDRAWN) {
             pushSubscriptionService.deactivateSubscriptionByWithdrawal(eventDto.getUserId());
             return;
         }

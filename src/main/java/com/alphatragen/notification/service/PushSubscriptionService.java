@@ -33,26 +33,21 @@ public class PushSubscriptionService {
                 throw new IllegalArgumentException("Endpoint is already registered by another user");
             }
             
-            existing.setApartmentId(apartmentId);
-            existing.setP256dh(p256dh);
-            existing.setAuth(auth);
-            existing.setBrowser(browser);
-            existing.setDeviceType(deviceType);
-            existing.setActive(true);
-            existing.setLastUsedAt(LocalDateTime.now());
+            existing.updateSubscription(apartmentId, p256dh, auth, browser, deviceType, LocalDateTime.now());
             return repository.save(existing);
         }
 
-        PushSubscription subscription = new PushSubscription();
-        subscription.setUserId(userId);
-        subscription.setApartmentId(apartmentId);
-        subscription.setEndpoint(endpoint);
-        subscription.setP256dh(p256dh);
-        subscription.setAuth(auth);
-        subscription.setBrowser(browser);
-        subscription.setDeviceType(deviceType);
-        subscription.setActive(true);
-        subscription.setLastUsedAt(LocalDateTime.now());
+        PushSubscription subscription = PushSubscription.builder()
+                .userId(userId)
+                .apartmentId(apartmentId)
+                .endpoint(endpoint)
+                .p256dh(p256dh)
+                .auth(auth)
+                .browser(browser)
+                .deviceType(deviceType)
+                .active(true)
+                .lastUsedAt(LocalDateTime.now())
+                .build();
         return repository.save(subscription);
     }
 
@@ -68,7 +63,7 @@ public class PushSubscriptionService {
             throw new IllegalArgumentException("Cannot unsubscribe endpoint belonging to another user");
         }
         
-        subscription.setActive(false);
+        subscription.deactivate();
         repository.save(subscription);
     }
 
@@ -78,7 +73,7 @@ public class PushSubscriptionService {
         }
         List<PushSubscription> subscriptions = repository.findByUserId(userId);
         for (PushSubscription sub : subscriptions) {
-            sub.setActive(false);
+            sub.deactivate();
         }
         repository.saveAll(subscriptions);
     }

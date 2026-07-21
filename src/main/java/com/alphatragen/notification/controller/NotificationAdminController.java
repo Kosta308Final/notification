@@ -4,12 +4,12 @@ import com.alphatragen.notification.domain.Notification;
 import com.alphatragen.notification.dto.AdminNotificationPageRespDto;
 import com.alphatragen.notification.dto.ManualNotificationReqDto;
 import com.alphatragen.notification.dto.RecipientPreviewRespDto;
+import com.alphatragen.notification.security.CurrentUser;
 import com.alphatragen.notification.security.JwtUserClaims;
 import com.alphatragen.notification.service.NotificationAdminService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,10 +20,9 @@ public class NotificationAdminController {
 
     @GetMapping
     public AdminNotificationPageRespDto history(
-            Authentication authentication,
+            @CurrentUser JwtUserClaims claims,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
-        JwtUserClaims claims = JwtUserClaims.from(authentication);
         Pageable pageable = PageRequest.of(page, size);
         return AdminNotificationPageRespDto.from(
                 adminService.getHistory(claims.apartmentId(), String.join(",", claims.roles()), pageable)
@@ -31,14 +30,16 @@ public class NotificationAdminController {
     }
 
     @PostMapping("/recipients/preview")
-    public RecipientPreviewRespDto preview(@Valid @RequestBody ManualNotificationReqDto request, Authentication authentication) {
-        JwtUserClaims claims = JwtUserClaims.from(authentication);
+    public RecipientPreviewRespDto preview(
+            @Valid @RequestBody ManualNotificationReqDto request,
+            @CurrentUser JwtUserClaims claims) {
         return adminService.preview(request, claims.apartmentId(), String.join(",", claims.roles()));
     }
 
     @PostMapping
-    public Notification send(@Valid @RequestBody ManualNotificationReqDto request, Authentication authentication) {
-        JwtUserClaims claims = JwtUserClaims.from(authentication);
+    public Notification send(
+            @Valid @RequestBody ManualNotificationReqDto request,
+            @CurrentUser JwtUserClaims claims) {
         return adminService.send(request, claims.userId(), claims.apartmentId(), String.join(",", claims.roles()));
     }
 }

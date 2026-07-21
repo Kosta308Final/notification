@@ -53,30 +53,13 @@ class WebPushSenderTest {
 
     @Test
     void whenActiveSubscriptionsExist_thenSendToEachAndSaveLastUsedOnSuccess() throws Exception {
-        PushSubscription sub1 = new PushSubscription();
-        sub1.setId(101L);
-        sub1.setUserId(1L);
-        sub1.setApartmentId(10L);
-        sub1.setEndpoint("https://updates.push.services.mozilla.com/wpush/v2/gAAAAA");
-        sub1.setP256dh("BCJqbgnMJBUSN4VChYAQ1XmHeCy1-dL8EXhr1urZw5pP-RUnIluVV-q3sbw7yUyAfSt24r9pzFjgpW-bia0b8lA");
-        sub1.setAuth("eXNhYmNkZWZnaGlqa2xtbg==");
-        sub1.setActive(true);
-
-        PushSubscription sub2 = new PushSubscription();
-        sub2.setId(102L);
-        sub2.setUserId(1L);
-        sub2.setApartmentId(10L);
-        sub2.setEndpoint("https://fcm.googleapis.com/fcm/send/some_token");
-        sub2.setP256dh("BCJqbgnMJBUSN4VChYAQ1XmHeCy1-dL8EXhr1urZw5pP-RUnIluVV-q3sbw7yUyAfSt24r9pzFjgpW-bia0b8lA");
-        sub2.setAuth("eXNhYmNkZWZnaGlqa2xtbg==");
-        sub2.setActive(true);
+        PushSubscription sub1 = subscription(101L, "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA");
+        PushSubscription sub2 = subscription(102L, "https://fcm.googleapis.com/fcm/send/some_token");
 
         when(pushSubscriptionRepository.findByUserIdAndIsActiveTrue(1L))
                 .thenReturn(Arrays.asList(sub1, sub2));
 
-        Notification notification = new Notification();
-        notification.setId(10L);
-        notification.setImportance(NotificationImportance.URGENT);
+        Notification notification = notification(NotificationImportance.URGENT);
         when(notificationRepository.findById(10L)).thenReturn(Optional.of(notification));
 
         HttpResponse response = mock(HttpResponse.class);
@@ -105,21 +88,12 @@ class WebPushSenderTest {
 
     @Test
     void whenSubscriptionIsExpired_thenDeactivateSubscription() throws Exception {
-        PushSubscription sub1 = new PushSubscription();
-        sub1.setId(101L);
-        sub1.setUserId(1L);
-        sub1.setApartmentId(10L);
-        sub1.setEndpoint("https://updates.push.services.mozilla.com/wpush/v2/gAAAAA");
-        sub1.setP256dh("BCJqbgnMJBUSN4VChYAQ1XmHeCy1-dL8EXhr1urZw5pP-RUnIluVV-q3sbw7yUyAfSt24r9pzFjgpW-bia0b8lA");
-        sub1.setAuth("eXNhYmNkZWZnaGlqa2xtbg==");
-        sub1.setActive(true);
+        PushSubscription sub1 = subscription(101L, "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA");
 
         when(pushSubscriptionRepository.findByUserIdAndIsActiveTrue(1L))
                 .thenReturn(Collections.singletonList(sub1));
 
-        Notification notification = new Notification();
-        notification.setId(10L);
-        notification.setImportance(NotificationImportance.NORMAL);
+        Notification notification = notification(NotificationImportance.NORMAL);
         when(notificationRepository.findById(10L)).thenReturn(Optional.of(notification));
 
         HttpResponse response410 = mock(HttpResponse.class);
@@ -137,21 +111,12 @@ class WebPushSenderTest {
 
     @Test
     void whenSubscriptionIsNotFound_thenDeactivateSubscription() throws Exception {
-        PushSubscription sub1 = new PushSubscription();
-        sub1.setId(101L);
-        sub1.setUserId(1L);
-        sub1.setApartmentId(10L);
-        sub1.setEndpoint("https://updates.push.services.mozilla.com/wpush/v2/gAAAAA");
-        sub1.setP256dh("BCJqbgnMJBUSN4VChYAQ1XmHeCy1-dL8EXhr1urZw5pP-RUnIluVV-q3sbw7yUyAfSt24r9pzFjgpW-bia0b8lA");
-        sub1.setAuth("eXNhYmNkZWZnaGlqa2xtbg==");
-        sub1.setActive(true);
+        PushSubscription sub1 = subscription(101L, "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA");
 
         when(pushSubscriptionRepository.findByUserIdAndIsActiveTrue(1L))
                 .thenReturn(Collections.singletonList(sub1));
 
-        Notification notification = new Notification();
-        notification.setId(10L);
-        notification.setImportance(NotificationImportance.NORMAL);
+        Notification notification = notification(NotificationImportance.NORMAL);
         when(notificationRepository.findById(10L)).thenReturn(Optional.of(notification));
 
         HttpResponse response404 = mock(HttpResponse.class);
@@ -169,30 +134,13 @@ class WebPushSenderTest {
 
     @Test
     void whenOneSubscriptionFails_thenContinueSendingToOtherSubscriptions() throws Exception {
-        PushSubscription sub1 = new PushSubscription();
-        sub1.setId(101L);
-        sub1.setUserId(1L);
-        sub1.setApartmentId(10L);
-        sub1.setEndpoint("https://updates.push.services.mozilla.com/wpush/v2/sub1");
-        sub1.setP256dh("BCJqbgnMJBUSN4VChYAQ1XmHeCy1-dL8EXhr1urZw5pP-RUnIluVV-q3sbw7yUyAfSt24r9pzFjgpW-bia0b8lA");
-        sub1.setAuth("eXNhYmNkZWZnaGlqa2xtbg==");
-        sub1.setActive(true);
-
-        PushSubscription sub2 = new PushSubscription();
-        sub2.setId(102L);
-        sub2.setUserId(1L);
-        sub2.setApartmentId(10L);
-        sub2.setEndpoint("https://fcm.googleapis.com/fcm/send/sub2");
-        sub2.setP256dh("BCJqbgnMJBUSN4VChYAQ1XmHeCy1-dL8EXhr1urZw5pP-RUnIluVV-q3sbw7yUyAfSt24r9pzFjgpW-bia0b8lA");
-        sub2.setAuth("eXNhYmNkZWZnaGlqa2xtbg==");
-        sub2.setActive(true);
+        PushSubscription sub1 = subscription(101L, "https://updates.push.services.mozilla.com/wpush/v2/sub1");
+        PushSubscription sub2 = subscription(102L, "https://fcm.googleapis.com/fcm/send/sub2");
 
         when(pushSubscriptionRepository.findByUserIdAndIsActiveTrue(1L))
                 .thenReturn(Arrays.asList(sub1, sub2));
 
-        Notification notification = new Notification();
-        notification.setId(10L);
-        notification.setImportance(NotificationImportance.NORMAL);
+        Notification notification = notification(NotificationImportance.NORMAL);
         when(notificationRepository.findById(10L)).thenReturn(Optional.of(notification));
 
         HttpResponse response201 = mock(HttpResponse.class);
@@ -216,5 +164,24 @@ class WebPushSenderTest {
         // sub2 succeeded, it should be saved
         verify(pushSubscriptionRepository, times(1)).save(sub2);
         assertThat(sub2.isActive()).isTrue();
+    }
+
+    private PushSubscription subscription(Long id, String endpoint) {
+        return PushSubscription.builder()
+                .id(id)
+                .userId(1L)
+                .apartmentId(10L)
+                .endpoint(endpoint)
+                .p256dh("BCJqbgnMJBUSN4VChYAQ1XmHeCy1-dL8EXhr1urZw5pP-RUnIluVV-q3sbw7yUyAfSt24r9pzFjgpW-bia0b8lA")
+                .auth("eXNhYmNkZWZnaGlqa2xtbg==")
+                .active(true)
+                .build();
+    }
+
+    private Notification notification(NotificationImportance importance) {
+        return Notification.builder()
+                .id(10L)
+                .importance(importance)
+                .build();
     }
 }

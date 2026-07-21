@@ -1,10 +1,23 @@
 package com.alphatragen.notification.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
+/**
+ * 사용자의 브라우저 푸시 알림 구독 정보를 저장하는 엔티티입니다.
+ *
+ * push_subscription 테이블에 사용자·아파트 식별자와 Web Push 인증 정보, 활성 상태를 저장하며,
+ * endpoint를 unique로 두어 동일한 브라우저 구독이 중복 저장되지 않도록 합니다.
+ */
 @Entity
 @Table(name = "push_subscription")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PushSubscription {
 
     @Id
@@ -38,86 +51,41 @@ public class PushSubscription {
     @Column(name = "last_used_at", nullable = false)
     private LocalDateTime lastUsedAt = LocalDateTime.now();
 
-    public PushSubscription() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
+    @Builder
+    private PushSubscription(Long id, Long userId, Long apartmentId, String endpoint, String p256dh, String auth,
+                             String browser, String deviceType, Boolean active, LocalDateTime lastUsedAt) {
         this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
         this.userId = userId;
-    }
-
-    public Long getApartmentId() {
-        return apartmentId;
-    }
-
-    public void setApartmentId(Long apartmentId) {
         this.apartmentId = apartmentId;
-    }
-
-    public String getEndpoint() {
-        return endpoint;
-    }
-
-    public void setEndpoint(String endpoint) {
         this.endpoint = endpoint;
-    }
-
-    public String getP256dh() {
-        return p256dh;
-    }
-
-    public void setP256dh(String p256dh) {
         this.p256dh = p256dh;
-    }
-
-    public String getAuth() {
-        return auth;
-    }
-
-    public void setAuth(String auth) {
         this.auth = auth;
-    }
-
-    public String getBrowser() {
-        return browser;
-    }
-
-    public void setBrowser(String browser) {
         this.browser = browser;
-    }
-
-    public String getDeviceType() {
-        return deviceType;
-    }
-
-    public void setDeviceType(String deviceType) {
         this.deviceType = deviceType;
+        isActive = active == null || active;
+        this.lastUsedAt = lastUsedAt == null ? LocalDateTime.now() : lastUsedAt;
     }
 
     public boolean isActive() {
         return isActive;
     }
 
-    public void setActive(boolean active) {
-        isActive = active;
+    public void updateSubscription(Long apartmentId, String p256dh, String auth, String browser, String deviceType,
+                                   LocalDateTime lastUsedAt) {
+        this.apartmentId = apartmentId;
+        this.p256dh = p256dh;
+        this.auth = auth;
+        this.browser = browser;
+        this.deviceType = deviceType;
+        activate(lastUsedAt);
     }
 
-    public LocalDateTime getLastUsedAt() {
-        return lastUsedAt;
-    }
-
-    public void setLastUsedAt(LocalDateTime lastUsedAt) {
+    public void activate(LocalDateTime lastUsedAt) {
+        isActive = true;
         this.lastUsedAt = lastUsedAt;
+    }
+
+    public void deactivate() {
+        isActive = false;
     }
 }

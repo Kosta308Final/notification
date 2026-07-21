@@ -20,7 +20,8 @@ public class ApartmentTargetResolver implements TargetResolver {
     }
 
     @Override
-    public List<Long> resolve(Long apartmentId, Long userId, String building, String unit, String role) {
+    public List<Long> resolve(TargetCondition condition) {
+        Long apartmentId = condition.apartmentId();
         if (apartmentId == null) {
             throw new IllegalArgumentException("apartmentId is required for APARTMENT target type");
         }

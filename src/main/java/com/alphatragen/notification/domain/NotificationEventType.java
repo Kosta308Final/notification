@@ -4,17 +4,22 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum NotificationEventType {
-    COMPLAINT_STATUS_CHANGED("민원 상태 변경", NotificationImportance.NORMAL),
-    COMPLAINT_ANSWER_REGISTERED("민원 답변 등록", NotificationImportance.NORMAL),
-    FACILITY_REQUEST_APPROVED("시설 신청 승인", NotificationImportance.NORMAL),
-    FACILITY_REQUEST_REJECTED("시설 신청 거절", NotificationImportance.NORMAL),
-    FACILITY_RESERVATION_CANCELLED_BY_ADMIN("시설 예약 관리자 취소", NotificationImportance.NORMAL),
-    VOTE_STARTED("투표 시작", NotificationImportance.NORMAL),
-    VOTE_END_IMMINENT("투표 종료 임박", NotificationImportance.NORMAL),
-    VOTE_RESULT_PUBLISHED("투표 결과 공개", NotificationImportance.NORMAL),
-    URGENT_NOTICE("긴급 공지", NotificationImportance.URGENT),
-    USER_WITHDRAWAL("회원 탈퇴", NotificationImportance.NORMAL),
-    OFFICE_MANUAL_SEND("관리사무소 수동 발송", NotificationImportance.NORMAL);
+    COMPLAINT_STATUS_CHANGED("Complaint status changed", NotificationImportance.NORMAL),
+    COMPLAINT_ANSWERED("Complaint answered", NotificationImportance.NORMAL),
+    FACILITY_REQUEST_APPROVED("Facility request approved", NotificationImportance.NORMAL),
+    FACILITY_REQUEST_REJECTED("Facility request rejected", NotificationImportance.NORMAL),
+    FACILITY_RESERVATION_CANCELLED_BY_ADMIN("Facility reservation cancelled by admin", NotificationImportance.NORMAL),
+    POST_COMMENT_CREATED("Post comment created", NotificationImportance.NORMAL),
+    CLUB_JOIN_APPROVED("Club join approved", NotificationImportance.NORMAL),
+    CLUB_JOIN_REJECTED("Club join rejected", NotificationImportance.NORMAL),
+    CLUB_NOTICE_CREATED("Club notice created", NotificationImportance.NORMAL),
+    VOTE_STARTED("Vote started", NotificationImportance.NORMAL),
+    VOTE_END_IMMINENT("Vote end imminent", NotificationImportance.NORMAL),
+    VOTE_RESULT_PUBLISHED("Vote result published", NotificationImportance.NORMAL),
+    MAINTENANCE_FEE_PAYMENT_CONFIRMED("Maintenance fee payment confirmed", NotificationImportance.NORMAL),
+    NOTICE_CREATED("Notice created", NotificationImportance.URGENT),
+    USER_WITHDRAWN("User withdrawn", NotificationImportance.NORMAL),
+    OFFICE_MANUAL_SEND("Office manual send", NotificationImportance.NORMAL);
 
     private final String description;
     private final NotificationImportance defaultImportance;
