@@ -4,8 +4,10 @@ import com.alphatragen.notification.domain.Notification;
 import com.alphatragen.notification.domain.NotificationImportance;
 import com.alphatragen.notification.domain.NotificationSourceType;
 import com.alphatragen.notification.domain.NotificationTargetType;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
+
 
 public class AdminNotificationRespDto {
     private Long id;

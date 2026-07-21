@@ -97,3 +97,7 @@
   - Wrote comprehensive TDD unit tests in `VapidConfigTest.java` and `WebPushSenderTest.java` validating correct initialization, missing config handling, active subscription matching, failure isolation, and expired endpoint deactivation.
   - All test suites execute and compile successfully. Marked Phase 9 tasks as complete.
 2026-07-20 12 - Added Kafka consumer normalization for main-service notification JSON events, including nested recipients, offset timestamps, event aliases, and string-based deserialization.
+2026-07-20 21 - Fixed FCM Crypto-Key header separator compatibility for web-push 5.1.2.
+2026-07-20 21 - Removed custom Crypto-Key header rewriting and restored the default web-push VAPID header generation.
+2026-07-20 21 - Normalized only the FCM p256ecdsa Crypto-Key value from URL-safe Base64 to standard Base64.
+2026-07-20 21 - Corrected p256ecdsa handling to preserve URL-safe Base64 and remove padding without converting '-' or '_' characters.

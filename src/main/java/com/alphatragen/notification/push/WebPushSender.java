@@ -72,7 +72,17 @@ public class WebPushSender implements PushSender {
             log.info("Sending Web Push payload subscriptionId={} recipientUserId={}", sub.getId(), recipientUserId);
                 HttpResponse response = pushService.send(webPushNotification);
 
+
                 int statusCode = response.getStatusLine().getStatusCode();
+
+                String responseBody = response.getEntity() == null
+                        ? ""
+                        :
+                        org.apache.http.util.EntityUtils.toString(response.getEntity());
+
+                log.error("Web Push response: status={}, body={}", statusCode, responseBody);
+
+
                 if (statusCode == 201) {
                     log.info("Successfully sent Web Push to subscription: {}", sub.getId());
                     sub.setLastUsedAt(LocalDateTime.now());

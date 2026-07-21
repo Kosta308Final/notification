@@ -43,11 +43,11 @@ public class PushSubscriptionController {
         JwtUserClaims claims = JwtUserClaims.from(authentication);
         subscriptionService.subscribe(
                 claims.userId(), claims.apartmentId(),
-                requestDto.getEndpoint(),
-                requestDto.getP256dh(),
-                requestDto.getAuth(),
-                requestDto.getBrowser(),
-                requestDto.getDeviceType()
+                requestDto.endpoint(),
+                requestDto.p256dh(),
+                requestDto.auth(),
+                requestDto.browser(),
+                requestDto.deviceType()
         );
     }
 
@@ -56,11 +56,11 @@ public class PushSubscriptionController {
     public void deactivateAuthenticated(
             Authentication authentication,
             @Valid @RequestBody PushUnsubscribeReqDto requestDto) {
-        subscriptionService.unsubscribe(JwtUserClaims.from(authentication).userId(), requestDto.getEndpoint());
+        subscriptionService.unsubscribe(JwtUserClaims.from(authentication).userId(), requestDto.endpoint());
     }
 
     public void subscribe(Long userId, Long apartmentId, PushSubscriptionReqDto requestDto) {
-        subscriptionService.subscribe(userId, apartmentId, requestDto.getEndpoint(), requestDto.getP256dh(), requestDto.getAuth(), requestDto.getBrowser(), requestDto.getDeviceType());
+        subscriptionService.subscribe(userId, apartmentId, requestDto.endpoint(), requestDto.p256dh(), requestDto.auth(), requestDto.browser(), requestDto.deviceType());
     }
-    public void deactivate(Long userId, PushUnsubscribeReqDto requestDto) { subscriptionService.unsubscribe(userId, requestDto.getEndpoint()); }
+    public void deactivate(Long userId, PushUnsubscribeReqDto requestDto) { subscriptionService.unsubscribe(userId, requestDto.endpoint()); }
 }

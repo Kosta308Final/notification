@@ -13,9 +13,12 @@ jwt:
   secret: ${JWT_SECRET}
 
 app:
+  backend:
+    base-url: ${BACKEND_BASE_URL:http://localhost:8080}
+    internal-token: ${BACKEND_INTERNAL_TOKEN:local-notification-service-token}
   vapid:
-    public-key: ${VAPID_PUBLIC_KEY:BCJqbgnMJBUSN4VChYAQ1XmHeCy1-dL8EXhr1urZw5pP-RUnIluVV-q3sbw7yUyAfSt24r9pzFjgpW-bia0b8lA}
-    private-key: ${VAPID_PRIVATE_KEY:UaO5mP8qEqr3KJsUFGIiwhFV09lpQAKbSDIQJQDKLhM}
+    public-key: ${VAPID_PUBLIC_KEY}
+    private-key: ${VAPID_PRIVATE_KEY}
     subject: ${VAPID_SUBJECT:mailto:admin@apartment.com}
   retention:
     default-days: ${DEFAULT_RETENTION_DAYS:90}

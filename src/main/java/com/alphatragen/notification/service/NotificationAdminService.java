@@ -43,10 +43,10 @@ public class NotificationAdminService {
     }
 
     public RecipientPreviewRespDto preview(ManualNotificationReqDto request, Long adminApartmentId, String roles) {
-        authorize(request.getApartmentId(), adminApartmentId, roles);
+        authorize(request.apartmentId(), adminApartmentId, roles);
         request.validateTargetSpecificFields();
         List<Long> ids = resolve(request);
-        log.info("notification_recipient_preview apartmentId={} recipientCount={}", request.getApartmentId(), ids.size());
+        log.info("notification_recipient_preview apartmentId={} recipientCount={}", request.apartmentId(), ids.size());
         return new RecipientPreviewRespDto(ids.size(), ids);
     }
 
@@ -59,32 +59,32 @@ public class NotificationAdminService {
 
     @Transactional
     public Notification send(ManualNotificationReqDto request, Long adminUserId, Long adminApartmentId, String roles) {
-        authorize(request.getApartmentId(), adminApartmentId, roles);
+        authorize(request.apartmentId(), adminApartmentId, roles);
         request.validateForSend();
         List<Long> ids = resolve(request);
-        int retentionDays = request.getRetentionDays() != null ? request.getRetentionDays()
-                : settingRepository.findByApartmentId(request.getApartmentId()).map(NotificationSetting::getRetentionDays).orElse(DEFAULT_RETENTION_DAYS);
+        int retentionDays = request.retentionDays() != null ? request.retentionDays()
+                : settingRepository.findByApartmentId(request.apartmentId()).map(NotificationSetting::getRetentionDays).orElse(DEFAULT_RETENTION_DAYS);
 
         Notification notification = new Notification();
         notification.setEventId("MANUAL-" + UUID.randomUUID());
-        notification.setImportance(request.getImportance());
+        notification.setImportance(request.importance());
         notification.setSourceType(NotificationSourceType.OFFICE_MANUAL);
         notification.setCreatedBy(adminUserId);
-        notification.setTitle(request.getTitle());
-        notification.setContent(request.getContent());
-        notification.setActionUrl(request.getActionUrl());
+        notification.setTitle(request.title());
+        notification.setContent(request.content());
+        notification.setActionUrl(request.actionUrl());
         LocalDateTime createdAt = LocalDateTime.now();
         notification.setCreatedAt(createdAt);
         notification.setRetentionUntil(createdAt.plusDays(retentionDays));
 
         NotificationTarget target = new NotificationTarget();
         target.setNotification(notification);
-        target.setTargetType(request.getTargetType());
-        target.setApartmentId(request.getApartmentId());
-        target.setUserId(request.getUserId());
-        target.setBuilding(request.getBuilding());
-        target.setUnit(request.getUnit());
-        target.setRole(request.getRole());
+        target.setTargetType(request.targetType());
+        target.setApartmentId(request.apartmentId());
+        target.setUserId(request.userId());
+        target.setBuilding(request.building());
+        target.setUnit(request.unit());
+        target.setRole(request.role());
         notification.getTargets().add(target);
 
         List<NotificationRecipient> recipients = new ArrayList<>();
@@ -92,13 +92,13 @@ public class NotificationAdminService {
         notification.setRecipients(recipients);
         Notification saved = notificationRepository.save(notification);
         log.info("notification_manual_created eventId={} apartmentId={} adminUserId={} recipientCount={}",
-                saved.getEventId(), request.getApartmentId(), adminUserId, ids.size());
+                saved.getEventId(), request.apartmentId(), adminUserId, ids.size());
         if (!ids.isEmpty()) eventPublisher.publishEvent(new NotificationCreatedEvent(saved.getId(), ids, saved.getTitle(), saved.getContent(), saved.getActionUrl()));
         return saved;
     }
 
     private List<Long> resolve(ManualNotificationReqDto request) {
-        return resolver.resolveTargets(request.getTargetType(), request.getApartmentId(), request.getUserId(), request.getBuilding(), request.getUnit(), request.getRole());
+        return resolver.resolveTargets(request.targetType(), request.apartmentId(), request.userId(), request.building(), request.unit(), request.role());
     }
 
     private void authorize(Long requestedApartmentId, Long adminApartmentId, String roles) {

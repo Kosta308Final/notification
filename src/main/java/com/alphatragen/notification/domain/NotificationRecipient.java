@@ -1,5 +1,6 @@
 package com.alphatragen.notification.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -15,6 +16,7 @@ public class NotificationRecipient {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "notification_id", nullable = false)
+    @JsonIgnore
     private Notification notification;
 
     @Column(name = "recipient_user_id", nullable = false)

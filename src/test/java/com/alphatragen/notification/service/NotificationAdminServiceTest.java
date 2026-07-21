@@ -48,11 +48,8 @@ class NotificationAdminServiceTest {
 
     @Test
     void sendStoresManualNotificationAndPublishesPushEvent() {
-        ManualNotificationReqDto request = request(NotificationTargetType.INDIVIDUAL);
-        request.setUserId(10L);
-        request.setTitle("점검 안내");
-        request.setContent("내일 점검합니다.");
-        request.setImportance(NotificationImportance.URGENT);
+        ManualNotificationReqDto request = new ManualNotificationReqDto(1L, NotificationTargetType.INDIVIDUAL, 10L,
+                null, null, null, NotificationImportance.URGENT, "title", "content", null, null);
         when(resolver.resolveTargets(any(), any(), any(), any(), any(), any())).thenReturn(List.of(10L));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -73,9 +70,7 @@ class NotificationAdminServiceTest {
     }
 
     private ManualNotificationReqDto request(NotificationTargetType type) {
-        ManualNotificationReqDto request = new ManualNotificationReqDto();
-        request.setApartmentId(1L);
-        request.setTargetType(type);
-        return request;
+        return new ManualNotificationReqDto(1L, type, null, null, null, null,
+                NotificationImportance.NORMAL, null, null, null, null);
     }
 }
