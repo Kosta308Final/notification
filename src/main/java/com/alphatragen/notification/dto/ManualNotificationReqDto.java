@@ -15,7 +15,7 @@ public record ManualNotificationReqDto(
         @NotNull NotificationImportance importance,
         String title,
         String content,
-        @Pattern(regexp = "^/[a-zA-Z0-9_/-]*$", message = "actionUrl must be a relative internal path") String actionUrl,
+        @Pattern(regexp = "^/[a-zA-Z0-9_/#-]*$", message = "actionUrl must be a relative internal path") String actionUrl,
         Integer retentionDays
 ) {
     public ManualNotificationReqDto {

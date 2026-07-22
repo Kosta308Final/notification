@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -87,6 +90,9 @@ public class EventDeserializer {
         if (value == null || value.isNull()) {
             return null;
         }
+        if (value.isNumber()) {
+            return fromEpochTimestamp(value.decimalValue());
+        }
         if (value.isArray()) {
             return LocalDateTime.of(
                     value.get(0).asInt(),
@@ -107,6 +113,20 @@ public class EventDeserializer {
         } catch (RuntimeException ignored) {
             return LocalDateTime.parse(text);
         }
+    }
+
+    private LocalDateTime fromEpochTimestamp(BigDecimal timestamp) {
+        // 1e11 미만은 초, 그 이상은 밀리초 단위로 처리한다.
+        BigDecimal secondsValue = timestamp.abs().compareTo(new BigDecimal("100000000000")) >= 0
+                ? timestamp.movePointLeft(3)
+                : timestamp;
+        long seconds = secondsValue.longValue();
+        int nanos = secondsValue.subtract(BigDecimal.valueOf(seconds))
+                .movePointRight(9)
+                .intValue();
+        return Instant.ofEpochSecond(seconds, nanos)
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .toLocalDateTime();
     }
 
     private Map<String, String> toTemplateData(JsonNode node) {

@@ -25,7 +25,7 @@ public class EventValidator {
         if (event.getTargetType() == null) {
             throw new IllegalArgumentException("targetType is required");
         }
-        if (event.getActionUrl() != null && !event.getActionUrl().matches("^/[a-zA-Z0-9_/-]*$")) {
+        if (event.getActionUrl() != null && !event.getActionUrl().matches("^/[a-zA-Z0-9_/#-]*$")) {
             throw new IllegalArgumentException("actionUrl must be a relative internal path");
         }
 
