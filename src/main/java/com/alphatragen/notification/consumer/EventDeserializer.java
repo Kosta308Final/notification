@@ -19,6 +19,7 @@ import java.util.Map;
 @Component
 public class EventDeserializer {
 
+    private static final ZoneId DEFAULT_ZONE = ZoneId.of("Asia/Seoul");
     private final ObjectMapper objectMapper;
 
     public EventDeserializer(ObjectMapper objectMapper) {
@@ -125,7 +126,7 @@ public class EventDeserializer {
                 .movePointRight(9)
                 .intValue();
         return Instant.ofEpochSecond(seconds, nanos)
-                .atZone(ZoneId.of("Asia/Seoul"))
+                .atZone(DEFAULT_ZONE)
                 .toLocalDateTime();
     }
 
