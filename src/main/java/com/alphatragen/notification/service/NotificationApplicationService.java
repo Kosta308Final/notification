@@ -74,9 +74,13 @@ public class NotificationApplicationService {
                         eventPublisher.publishEvent(new NotificationCreatedEvent(
                                 saved.getId(),
                                 recipientUserIds,
+                                saved.getTargets().get(0).getApartmentId(),
                                 saved.getTitle(),
                                 saved.getContent(),
-                                saved.getActionUrl()
+                                saved.getActionUrl(),
+                                saved.getEventId(),
+                                saved.getImportance(),
+                                saved.getCreatedAt()
                         ));
                     }
 

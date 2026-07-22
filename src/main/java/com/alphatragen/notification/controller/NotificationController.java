@@ -30,8 +30,19 @@ public class NotificationController {
             @RequestParam(value = "isRead", required = false) Boolean isRead,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, Math.min(size, 100));
         return userService.getNotifications(claims.userId(), claims.apartmentId(), isRead, pageable)
+                .map(NotificationRespDto::new);
+    }
+
+    @GetMapping("/sync")
+    public Page<NotificationRespDto> syncNotifications(
+            @CurrentUser JwtUserClaims claims,
+            @RequestParam Long afterNotificationId,
+            @RequestParam(value = "size", defaultValue = "50") int size) {
+        if (afterNotificationId < 0) throw new IllegalArgumentException("afterNotificationId must be non-negative");
+        return userService.getNotificationsAfter(claims.userId(), claims.apartmentId(), afterNotificationId,
+                        PageRequest.of(0, Math.min(size, 100)))
                 .map(NotificationRespDto::new);
     }
 

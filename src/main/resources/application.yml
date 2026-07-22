@@ -29,7 +29,7 @@ jwt:
 app:
   backend:
     base-url: ${BACKEND_BASE_URL:http://localhost:8080}
-    internal-token: ${BACKEND_INTERNAL_TOKEN:local-notification-service-token}
+    internal-token: ${BACKEND_INTERNAL_TOKEN}
   vapid:
     public-key: ${VAPID_PUBLIC_KEY}
     private-key: ${VAPID_PRIVATE_KEY}

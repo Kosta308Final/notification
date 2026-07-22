@@ -39,7 +39,7 @@ public class NotificationFactory {
         TemplateResult templateResult = templateService.generate(dto.getEventType(), templateData);
 
         LocalDateTime createdAt = LocalDateTime.now();
-        int retentionDays = settingRepository.findByApartmentId(dto.getApartmentId())
+        int retentionDays = settingRepository.findByApartmentIdAndUserIdIsNull(dto.getApartmentId())
                 .map(NotificationSetting::getRetentionDays)
                 .orElse(DEFAULT_RETENTION_DAYS);
 
