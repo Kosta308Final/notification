@@ -20,10 +20,11 @@ public class RoleTargetResolver implements TargetResolver {
     }
 
     @Override
-    public List<Long> resolve(Long apartmentId, Long userId, String building, String unit, String role) {
+    public List<Long> resolve(TargetCondition condition) {
+        String role = condition.role();
         if (role == null || role.isBlank()) {
             throw new IllegalArgumentException("role is required for ROLE target type");
         }
-        return userServiceClient.findUsersByRole(apartmentId, role);
+        return userServiceClient.findUsersByRole(condition.apartmentId(), role);
     }
 }

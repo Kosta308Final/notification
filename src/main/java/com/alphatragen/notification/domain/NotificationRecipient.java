@@ -1,12 +1,26 @@
 package com.alphatragen.notification.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
+/**
+ * 특정 사용자에게 배정된 알림과 그 처리 상태(수신·읽음)를 저장하는 엔티티입니다.
+ *
+ * notification_recipient 테이블에 수신 사용자, 읽음 여부, 읽은 시각과 푸시 발송 시각을 저장하고,
+ * notification_id 외래 키로 원본 Notification에 연결됩니다.
+ */
 @Entity
 @Table(name = "notification_recipient", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"notification_id", "recipient_user_id"})
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationRecipient {
 
     @Id
@@ -15,6 +29,7 @@ public class NotificationRecipient {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "notification_id", nullable = false)
+    @JsonIgnore
     private Notification notification;
 
     @Column(name = "recipient_user_id", nullable = false)
@@ -29,54 +44,31 @@ public class NotificationRecipient {
     @Column(name = "push_sent_at")
     private LocalDateTime pushSentAt;
 
-    public NotificationRecipient() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
+    @Builder
+    private NotificationRecipient(Long id, Notification notification, Long recipientUserId, boolean read,
+                                  LocalDateTime readAt, LocalDateTime pushSentAt) {
         this.id = id;
-    }
-
-    public Notification getNotification() {
-        return notification;
-    }
-
-    public void setNotification(Notification notification) {
         this.notification = notification;
-    }
-
-    public Long getRecipientUserId() {
-        return recipientUserId;
-    }
-
-    public void setRecipientUserId(Long recipientUserId) {
         this.recipientUserId = recipientUserId;
+        isRead = read;
+        this.readAt = readAt;
+        this.pushSentAt = pushSentAt;
     }
 
     public boolean isRead() {
         return isRead;
     }
 
-    public void setRead(boolean read) {
-        this.isRead = read;
+    void assignNotification(Notification notification) {
+        this.notification = notification;
     }
 
-    public LocalDateTime getReadAt() {
-        return readAt;
-    }
-
-    public void setReadAt(LocalDateTime readAt) {
+    public void markAsRead(LocalDateTime readAt) {
+        this.isRead = true;
         this.readAt = readAt;
     }
 
-    public LocalDateTime getPushSentAt() {
-        return pushSentAt;
-    }
-
-    public void setPushSentAt(LocalDateTime pushSentAt) {
+    public void markPushSent(LocalDateTime pushSentAt) {
         this.pushSentAt = pushSentAt;
     }
 }

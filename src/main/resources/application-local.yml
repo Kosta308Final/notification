@@ -1,3 +1,6 @@
+# Local profile.
+# - Owns local infrastructure connections: PostgreSQL and Kafka broker settings.
+# - Uses DB_URL, DB_USERNAME, DB_PASSWORD and KAFKA_* environment variables when provided.
 spring:
   config:
     activate:
@@ -22,12 +25,3 @@ spring:
       sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:}
       ssl.truststore.type: ${KAFKA_SSL_TRUSTSTORE_TYPE:}
       ssl.truststore.location: ${KAFKA_CA_PATH:}
-    consumer:
-      group-id: notification-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      properties: {}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

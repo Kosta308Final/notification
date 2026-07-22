@@ -1,19 +1,22 @@
 package com.alphatragen.notification.repository;
 
+import com.alphatragen.notification.config.JpaConfig;
 import com.alphatragen.notification.domain.NotificationSetting;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
 @ActiveProfiles("test")
-@Transactional
+@Tag("jpa")
+@Import(JpaConfig.class)
 class NotificationSettingRepositoryTest {
 
     @Autowired
@@ -24,9 +27,10 @@ class NotificationSettingRepositoryTest {
 
     @Test
     void testSaveSettingSuccess() {
-        NotificationSetting setting = new NotificationSetting();
-        setting.setApartmentId(101L);
-        setting.setRetentionDays(120);
+        NotificationSetting setting = NotificationSetting.builder()
+                .apartmentId(101L)
+                .retentionDays(120)
+                .build();
 
         NotificationSetting saved = settingRepository.save(setting);
         entityManager.flush();
@@ -38,8 +42,9 @@ class NotificationSettingRepositoryTest {
 
     @Test
     void testDefaultRetentionDaysIs90() {
-        NotificationSetting setting = new NotificationSetting();
-        setting.setApartmentId(102L);
+        NotificationSetting setting = NotificationSetting.builder()
+                .apartmentId(102L)
+                .build();
 
         NotificationSetting saved = settingRepository.save(setting);
         entityManager.flush();
@@ -49,25 +54,28 @@ class NotificationSettingRepositoryTest {
 
     @Test
     void testRetentionDaysOutOfRangeThrowsException() {
-        NotificationSetting setting = new NotificationSetting();
-        setting.setApartmentId(103L);
+        NotificationSetting setting = NotificationSetting.builder()
+                .apartmentId(103L)
+                .build();
 
         // Less than 30
-        assertThrows(IllegalArgumentException.class, () -> setting.setRetentionDays(29));
+        assertThrows(IllegalArgumentException.class, () -> setting.updateRetention(29, 1L, java.time.LocalDateTime.now()));
 
         // Greater than 365
-        assertThrows(IllegalArgumentException.class, () -> setting.setRetentionDays(366));
+        assertThrows(IllegalArgumentException.class, () -> setting.updateRetention(366, 1L, java.time.LocalDateTime.now()));
     }
 
     @Test
     void testDuplicateApartmentIdThrowsException() {
-        NotificationSetting setting1 = new NotificationSetting();
-        setting1.setApartmentId(104L);
+        NotificationSetting setting1 = NotificationSetting.builder()
+                .apartmentId(104L)
+                .build();
         settingRepository.save(setting1);
         entityManager.flush();
 
-        NotificationSetting setting2 = new NotificationSetting();
-        setting2.setApartmentId(104L); // Duplicate apartmentId
+        NotificationSetting setting2 = NotificationSetting.builder()
+                .apartmentId(104L)
+                .build();
 
         assertThrows(DataIntegrityViolationException.class, () -> {
             settingRepository.save(setting2);
@@ -77,14 +85,16 @@ class NotificationSettingRepositoryTest {
 
     @Test
     void testDifferentApartmentsHaveDifferentSettings() {
-        NotificationSetting setting1 = new NotificationSetting();
-        setting1.setApartmentId(105L);
-        setting1.setRetentionDays(30);
+        NotificationSetting setting1 = NotificationSetting.builder()
+                .apartmentId(105L)
+                .retentionDays(30)
+                .build();
         settingRepository.save(setting1);
 
-        NotificationSetting setting2 = new NotificationSetting();
-        setting2.setApartmentId(106L);
-        setting2.setRetentionDays(180);
+        NotificationSetting setting2 = NotificationSetting.builder()
+                .apartmentId(106L)
+                .retentionDays(180)
+                .build();
         settingRepository.save(setting2);
 
         entityManager.flush();

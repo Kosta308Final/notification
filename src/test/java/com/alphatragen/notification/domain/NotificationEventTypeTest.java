@@ -3,7 +3,8 @@ package com.alphatragen.notification.domain;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class NotificationEventTypeTest {
 
@@ -11,24 +12,20 @@ class NotificationEventTypeTest {
 
     @Test
     void testEnumDeserialization() throws Exception {
-        // Test valid event type name
         NotificationEventType type = objectMapper.readValue("\"COMPLAINT_STATUS_CHANGED\"", NotificationEventType.class);
         assertEquals(NotificationEventType.COMPLAINT_STATUS_CHANGED, type);
 
-        // Test valid description deserialization via fromValue
-        NotificationEventType typeDesc = NotificationEventType.fromValue("민원 답변 등록");
-        assertEquals(NotificationEventType.COMPLAINT_ANSWER_REGISTERED, typeDesc);
+        NotificationEventType typeDesc = NotificationEventType.fromValue("Complaint answered");
+        assertEquals(NotificationEventType.COMPLAINT_ANSWERED, typeDesc);
 
-        // Test invalid value throws exception
-        assertThrows(IllegalArgumentException.class, () -> {
-            NotificationEventType.fromValue("UNKNOWN_EVENT");
-        });
+        assertThrows(IllegalArgumentException.class, () -> NotificationEventType.fromValue("UNKNOWN_EVENT"));
     }
 
     @Test
     void testImportancePolicy() {
         assertEquals(NotificationImportance.NORMAL, NotificationEventType.COMPLAINT_STATUS_CHANGED.getDefaultImportance());
-        assertEquals(NotificationImportance.URGENT, NotificationEventType.URGENT_NOTICE.getDefaultImportance());
+        assertEquals(NotificationImportance.URGENT, NotificationEventType.NOTICE_CREATED.getDefaultImportance());
+        assertEquals(NotificationImportance.NORMAL, NotificationEventType.MAINTENANCE_FEE_PAYMENT_CONFIRMED.getDefaultImportance());
         assertEquals(NotificationImportance.NORMAL, NotificationEventType.OFFICE_MANUAL_SEND.getDefaultImportance());
     }
 }

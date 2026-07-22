@@ -17,5 +17,4 @@ public record ApiResponse<T>(
                 "SUCCESS", "요청을 처리했습니다.",
                 data, null);
     }
-
 }

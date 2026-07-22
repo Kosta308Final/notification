@@ -1,22 +1,23 @@
 package com.alphatragen.notification.repository;
 
 import com.alphatragen.notification.domain.*;
+import com.alphatragen.notification.config.JpaConfig;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
 @ActiveProfiles("test")
-@Transactional
+@Tag("jpa")
+@Import(JpaConfig.class)
 class NotificationRepositoryTest {
 
     @Autowired
@@ -27,14 +28,12 @@ class NotificationRepositoryTest {
 
     @Test
     void testSaveNotificationSuccess() {
-        Notification notification = new Notification();
-        notification.setEventId("evt-001");
-        notification.setImportance(NotificationImportance.NORMAL);
-        notification.setSourceType(NotificationSourceType.DOMAIN);
-        notification.setTitle("Test Title");
-        notification.setContent("Test Content");
-        notification.setActionUrl("/test-path");
-        notification.setRetentionUntil(LocalDateTime.now().plusDays(90));
+        Notification notification = notification("evt-001")
+                .importance(NotificationImportance.NORMAL)
+                .title("Test Title")
+                .content("Test Content")
+                .actionUrl("/test-path")
+                .build();
 
         Notification saved = notificationRepository.save(notification);
         entityManager.flush();
@@ -47,22 +46,18 @@ class NotificationRepositoryTest {
 
     @Test
     void testDuplicateEventIdThrowsException() {
-        Notification notification1 = new Notification();
-        notification1.setEventId("evt-dup");
-        notification1.setSourceType(NotificationSourceType.DOMAIN);
-        notification1.setTitle("Test 1");
-        notification1.setContent("Content 1");
-        notification1.setRetentionUntil(LocalDateTime.now().plusDays(90));
+        Notification notification1 = notification("evt-dup")
+                .title("Test 1")
+                .content("Content 1")
+                .build();
 
         notificationRepository.save(notification1);
         entityManager.flush();
 
-        Notification notification2 = new Notification();
-        notification2.setEventId("evt-dup");
-        notification2.setSourceType(NotificationSourceType.DOMAIN);
-        notification2.setTitle("Test 2");
-        notification2.setContent("Content 2");
-        notification2.setRetentionUntil(LocalDateTime.now().plusDays(90));
+        Notification notification2 = notification("evt-dup")
+                .title("Test 2")
+                .content("Content 2")
+                .build();
 
         assertThrows(DataIntegrityViolationException.class, () -> {
             notificationRepository.save(notification2);
@@ -72,12 +67,7 @@ class NotificationRepositoryTest {
 
     @Test
     void testDefaultImportanceNormal() {
-        Notification notification = new Notification();
-        notification.setEventId("evt-default-importance");
-        notification.setSourceType(NotificationSourceType.DOMAIN);
-        notification.setTitle("Title");
-        notification.setContent("Content");
-        notification.setRetentionUntil(LocalDateTime.now().plusDays(90));
+        Notification notification = notification("evt-default-importance").build();
 
         Notification saved = notificationRepository.save(notification);
         entityManager.flush();
@@ -87,13 +77,9 @@ class NotificationRepositoryTest {
 
     @Test
     void testNullActionUrlIsAllowed() {
-        Notification notification = new Notification();
-        notification.setEventId("evt-null-action-url");
-        notification.setSourceType(NotificationSourceType.DOMAIN);
-        notification.setTitle("Title");
-        notification.setContent("Content");
-        notification.setActionUrl(null);
-        notification.setRetentionUntil(LocalDateTime.now().plusDays(90));
+        Notification notification = notification("evt-null-action-url")
+                .actionUrl(null)
+                .build();
 
         assertDoesNotThrow(() -> {
             Notification saved = notificationRepository.save(notification);
@@ -104,21 +90,16 @@ class NotificationRepositoryTest {
 
     @Test
     void testSaveTargetsViaCascade() {
-        Notification notification = new Notification();
-        notification.setEventId("evt-cascade-target");
-        notification.setSourceType(NotificationSourceType.DOMAIN);
-        notification.setTitle("Title");
-        notification.setContent("Content");
-        notification.setRetentionUntil(LocalDateTime.now().plusDays(90));
+        Notification notification = notification("evt-cascade-target").build();
 
-        NotificationTarget target = new NotificationTarget();
-        target.setNotification(notification);
-        target.setTargetType(NotificationTargetType.HOUSEHOLD);
-        target.setApartmentId(1L);
-        target.setBuilding("101");
-        target.setUnit("1001");
+        NotificationTarget target = NotificationTarget.builder()
+                .targetType(NotificationTargetType.HOUSEHOLD)
+                .apartmentId(1L)
+                .building("101")
+                .unit("1001")
+                .build();
 
-        notification.setTargets(Collections.singletonList(target));
+        notification.addTarget(target);
 
         Notification saved = notificationRepository.save(notification);
         entityManager.flush();
@@ -132,20 +113,15 @@ class NotificationRepositoryTest {
 
     @Test
     void testDeleteNotificationCascadesToTargets() {
-        Notification notification = new Notification();
-        notification.setEventId("evt-cascade-delete");
-        notification.setSourceType(NotificationSourceType.DOMAIN);
-        notification.setTitle("Title");
-        notification.setContent("Content");
-        notification.setRetentionUntil(LocalDateTime.now().plusDays(90));
+        Notification notification = notification("evt-cascade-delete").build();
 
-        NotificationTarget target = new NotificationTarget();
-        target.setNotification(notification);
-        target.setTargetType(NotificationTargetType.INDIVIDUAL);
-        target.setApartmentId(1L);
-        target.setUserId(999L);
+        NotificationTarget target = NotificationTarget.builder()
+                .targetType(NotificationTargetType.INDIVIDUAL)
+                .apartmentId(1L)
+                .userId(999L)
+                .build();
 
-        notification.setTargets(Collections.singletonList(target));
+        notification.addTarget(target);
 
         Notification saved = notificationRepository.save(notification);
         entityManager.flush();
@@ -159,5 +135,14 @@ class NotificationRepositoryTest {
 
         assertNull(entityManager.find(Notification.class, saved.getId()));
         assertNull(entityManager.find(NotificationTarget.class, targetId));
+    }
+
+    private Notification.NotificationBuilder notification(String eventId) {
+        return Notification.builder()
+                .eventId(eventId)
+                .sourceType(NotificationSourceType.DOMAIN)
+                .title("Title")
+                .content("Content")
+                .retentionUntil(LocalDateTime.now().plusDays(90));
     }
 }

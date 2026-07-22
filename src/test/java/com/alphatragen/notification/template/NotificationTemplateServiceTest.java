@@ -7,7 +7,8 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class NotificationTemplateServiceTest {
 
@@ -19,134 +20,143 @@ class NotificationTemplateServiceTest {
     }
 
     @Test
-    void testComplaintStatusChangedTemplate() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("status", "처리완료");
+    void generateWithoutVariables() {
+        TemplateResult result = templateService.generate(
+                NotificationEventType.COMPLAINT_ANSWERED,
+                Map.of()
+        );
 
-        TemplateResult result = templateService.generate(NotificationEventType.COMPLAINT_STATUS_CHANGED, data);
-
-        assertEquals("민원 처리 상태가 변경되었습니다.", result.getTitle());
-        assertEquals("등록하신 민원의 상태가 [처리완료](으)로 변경되었습니다.", result.getContent());
+        assertEquals("Complaint answered", result.getTitle());
+        assertEquals("An administrator answered your complaint.", result.getContent());
     }
 
     @Test
-    void testComplaintAnswerRegisteredTemplate() {
-        Map<String, Object> data = new HashMap<>();
+    void generateWithOneVariable() {
+        TemplateResult result = templateService.generate(
+                NotificationEventType.COMPLAINT_STATUS_CHANGED,
+                Map.of("status", "DONE")
+        );
 
-        TemplateResult result = templateService.generate(NotificationEventType.COMPLAINT_ANSWER_REGISTERED, data);
-
-        assertEquals("민원에 답변이 등록되었습니다.", result.getTitle());
-        assertEquals("등록하신 민원에 대한 답변이 등록되었습니다.", result.getContent());
+        assertEquals("Complaint status updated", result.getTitle());
+        assertEquals("Your complaint status changed to DONE.", result.getContent());
     }
 
     @Test
-    void testFacilityRequestApprovedTemplate() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("facilityName", "피트니스 센터");
+    void generateWithMultipleVariables() {
+        TemplateResult result = templateService.generate(
+                NotificationEventType.FACILITY_REQUEST_REJECTED,
+                Map.of("facilityName", "Fitness Center", "reason", "Capacity exceeded")
+        );
 
-        TemplateResult result = templateService.generate(NotificationEventType.FACILITY_REQUEST_APPROVED, data);
-
-        assertEquals("시설 신청이 승인되었습니다.", result.getTitle());
-        assertEquals("피트니스 센터 신청이 승인되었습니다.", result.getContent());
+        assertEquals("Facility request rejected", result.getTitle());
+        assertEquals("Fitness Center request has been rejected. Reason: Capacity exceeded", result.getContent());
     }
 
     @Test
-    void testFacilityRequestRejectedTemplate() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("facilityName", "독서실");
-        data.put("reason", "인원 초과");
+    void generateReplacesTitlePlaceholder() {
+        TemplateResult result = templateService.generate(
+                NotificationEventType.NOTICE_CREATED,
+                Map.of("noticeTitle", "Water outage", "noticeContent", "Water is unavailable from 2 PM to 4 PM.")
+        );
 
-        TemplateResult result = templateService.generate(NotificationEventType.FACILITY_REQUEST_REJECTED, data);
-
-        assertEquals("시설 신청이 거절되었습니다.", result.getTitle());
-        assertEquals("독서실 신청이 거절되었습니다. 사유: 인원 초과", result.getContent());
+        assertEquals("[Urgent] Water outage", result.getTitle());
+        assertEquals("Water is unavailable from 2 PM to 4 PM.", result.getContent());
     }
 
     @Test
-    void testFacilityReservationCancelledTemplate() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("facilityName", "게스트하우스");
-        data.put("reason", "시설 보수");
+    void generateMaintenanceFeePaymentConfirmed() {
+        TemplateResult result = templateService.generate(
+                NotificationEventType.MAINTENANCE_FEE_PAYMENT_CONFIRMED,
+                Map.of(
+                        "maintenanceFeeId", "900",
+                        "householdId", "77",
+                        "billingMonth", "2026-07",
+                        "paidAmount", "185000",
+                        "paidAt", "2026-07-21T10:15:00"
+                )
+        );
 
-        TemplateResult result = templateService.generate(NotificationEventType.FACILITY_RESERVATION_CANCELLED_BY_ADMIN, data);
-
-        assertEquals("시설 예약이 취소되었습니다.", result.getTitle());
-        assertEquals("게스트하우스 예약이 관리자에 의해 취소되었습니다. 사유: 시설 보수", result.getContent());
+        assertEquals("Maintenance fee payment confirmed", result.getTitle());
+        assertEquals("2026-07 maintenance fee payment of 185000 has been confirmed.", result.getContent());
     }
 
     @Test
-    void testVoteStartedTemplate() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("voteTitle", "동대표 선거");
+    void generateThrowsExceptionWhenEventTypeIsNull() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> templateService.generate(null, Map.of())
+        );
 
-        TemplateResult result = templateService.generate(NotificationEventType.VOTE_STARTED, data);
-
-        assertEquals("새로운 투표가 시작되었습니다.", result.getTitle());
-        assertEquals("[동대표 선거] 투표가 시작되었습니다. 참여해 주세요.", result.getContent());
+        assertEquals("Event type cannot be null", exception.getMessage());
     }
 
     @Test
-    void testVoteEndImminentTemplate() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("voteTitle", "동대표 선거");
+    void generateThrowsExceptionWhenEventTypeIsUnsupported() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> templateService.generate(NotificationEventType.USER_WITHDRAWN, Map.of())
+        );
 
-        TemplateResult result = templateService.generate(NotificationEventType.VOTE_END_IMMINENT, data);
-
-        assertEquals("투표 참여 안내", result.getTitle());
-        assertEquals("[동대표 선거] 투표 종료가 임박했습니다. 아직 참여하지 않으셨다면 참여해 주세요.", result.getContent());
+        assertEquals(
+                "Unsupported event type for template rendering: USER_WITHDRAWN",
+                exception.getMessage()
+        );
     }
 
     @Test
-    void testVoteResultPublishedTemplate() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("voteTitle", "동대표 선거");
+    void generateThrowsExceptionWhenTemplateDataIsNull() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> templateService.generate(NotificationEventType.COMPLAINT_ANSWERED, null)
+        );
 
-        TemplateResult result = templateService.generate(NotificationEventType.VOTE_RESULT_PUBLISHED, data);
-
-        assertEquals("투표 결과가 공개되었습니다.", result.getTitle());
-        assertEquals("[동대표 선거] 투표 결과가 공개되었습니다. 확인해 주세요.", result.getContent());
+        assertEquals("Template data cannot be null", exception.getMessage());
     }
 
     @Test
-    void testUrgentNoticeTemplate() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("noticeTitle", "단수 안내");
-        data.put("noticeContent", "오후 2시부터 4시까지 단수됩니다.");
+    void generateThrowsExceptionWhenRequiredKeyIsMissing() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> templateService.generate(NotificationEventType.FACILITY_REQUEST_APPROVED, Map.of())
+        );
 
-        TemplateResult result = templateService.generate(NotificationEventType.URGENT_NOTICE, data);
-
-        assertEquals("[긴급] 단수 안내", result.getTitle());
-        assertEquals("오후 2시부터 4시까지 단수됩니다.", result.getContent());
+        assertEquals("Missing required template variable: facilityName", exception.getMessage());
     }
 
     @Test
-    void testOfficeManualSendTemplate() {
+    void generateThrowsExceptionWhenRequiredValueIsNull() {
         Map<String, Object> data = new HashMap<>();
-        data.put("title", "수동 제목");
-        data.put("content", "수동 내용");
+        data.put("facilityName", null);
 
-        TemplateResult result = templateService.generate(NotificationEventType.OFFICE_MANUAL_SEND, data);
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> templateService.generate(NotificationEventType.FACILITY_REQUEST_APPROVED, data)
+        );
 
-        assertEquals("수동 제목", result.getTitle());
-        assertEquals("수동 내용", result.getContent());
+        assertEquals("Missing required template variable: facilityName", exception.getMessage());
     }
 
     @Test
-    void testMissingRequiredVariableThrowsException() {
-        Map<String, Object> data = new HashMap<>(); // Empty
+    void generateThrowsExceptionWhenRequiredValueIsBlank() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> templateService.generate(
+                        NotificationEventType.FACILITY_REQUEST_APPROVED,
+                        Map.of("facilityName", "   ")
+                )
+        );
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            templateService.generate(NotificationEventType.FACILITY_REQUEST_APPROVED, data);
-        });
+        assertEquals("Missing required template variable: facilityName", exception.getMessage());
     }
 
     @Test
-    void testUnsupportedEventThrowsException() {
-        Map<String, Object> data = new HashMap<>();
+    void generateOfficeManualSendWithTitleAndContentPlaceholders() {
+        TemplateResult result = templateService.generate(
+                NotificationEventType.OFFICE_MANUAL_SEND,
+                Map.of("title", "Manual title", "content", "Manual content")
+        );
 
-        // USER_WITHDRAWAL is not supported for rendering
-        assertThrows(IllegalArgumentException.class, () -> {
-            templateService.generate(NotificationEventType.USER_WITHDRAWAL, data);
-        });
+        assertEquals("Manual title", result.getTitle());
+        assertEquals("Manual content", result.getContent());
     }
 }

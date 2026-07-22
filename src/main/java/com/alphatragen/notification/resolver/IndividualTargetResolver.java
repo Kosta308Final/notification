@@ -20,10 +20,11 @@ public class IndividualTargetResolver implements TargetResolver {
     }
 
     @Override
-    public List<Long> resolve(Long apartmentId, Long userId, String building, String unit, String role) {
+    public List<Long> resolve(TargetCondition condition) {
+        Long userId = condition.userId();
         if (userId == null) {
             throw new IllegalArgumentException("userId is required for INDIVIDUAL target type");
         }
-        return userServiceClient.findUsersByIndividual(apartmentId, userId);
+        return userServiceClient.findUsersByIndividual(condition.apartmentId(), userId);
     }
 }

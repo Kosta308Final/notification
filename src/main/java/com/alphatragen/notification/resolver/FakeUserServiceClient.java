@@ -1,10 +1,12 @@
 package com.alphatragen.notification.resolver;
 
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Profile;
 import java.util.Collections;
 import java.util.List;
 
 @Component
+@Profile("test")
 public class FakeUserServiceClient implements UserServiceClient {
     @Override
     public List<Long> findUsersByIndividual(Long apartmentId, Long userId) {

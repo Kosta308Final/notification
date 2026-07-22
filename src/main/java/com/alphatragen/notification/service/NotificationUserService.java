@@ -39,8 +39,7 @@ public class NotificationUserService {
         }
 
         if (!recipient.isRead()) {
-            recipient.setRead(true);
-            recipient.setReadAt(LocalDateTime.now());
+            recipient.markAsRead(LocalDateTime.now());
             return recipientRepository.save(recipient);
         }
         return recipient;
@@ -51,8 +50,7 @@ public class NotificationUserService {
         NotificationRecipient recipient = recipientRepository.findByIdAndRecipientUserIdAndApartmentId(id, userId, apartmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
         if (!recipient.isRead()) {
-            recipient.setRead(true);
-            recipient.setReadAt(LocalDateTime.now());
+            recipient.markAsRead(LocalDateTime.now());
             return recipientRepository.save(recipient);
         }
         return recipient;

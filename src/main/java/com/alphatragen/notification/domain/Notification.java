@@ -1,16 +1,30 @@
 package com.alphatragen.notification.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Singular;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+/**
+ * 알림 본문을 저장하는 엔티티입니다.
+ *
+ * notification 테이블에 알림 제목, 내용, 발생 출처, 중요도와 보관 만료일을 저장하며,
+ * NotificationTarget 및 NotificationRecipient와 1:N 관계로 연결됩니다.
+ */
 @Entity
 @Table(name = "notification")
 @EntityListeners(AuditingEntityListener.class)
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notification {
 
     @Id
@@ -53,104 +67,51 @@ public class Notification {
     @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<NotificationRecipient> recipients = new ArrayList<>();
 
-    public Notification() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
+    @Builder
+    private Notification(Long id, String eventId, NotificationImportance importance, NotificationSourceType sourceType,
+                         String title, String content, String actionUrl, Long createdBy,
+                         LocalDateTime retentionUntil, LocalDateTime createdAt,
+                         @Singular List<NotificationTarget> targets,
+                         @Singular List<NotificationRecipient> recipients) {
         this.id = id;
-    }
-
-    public String getEventId() {
-        return eventId;
-    }
-
-    public void setEventId(String eventId) {
         this.eventId = eventId;
-    }
-
-    public NotificationImportance getImportance() {
-        return importance;
-    }
-
-    public void setImportance(NotificationImportance importance) {
-        if (importance != null) {
-            this.importance = importance;
+        this.importance = importance == null ? NotificationImportance.NORMAL : importance;
+        this.sourceType = sourceType;
+        this.title = title;
+        this.content = content;
+        this.actionUrl = actionUrl;
+        this.createdBy = createdBy;
+        this.retentionUntil = retentionUntil;
+        this.createdAt = createdAt;
+        if (targets != null) {
+            targets.forEach(this::addTarget);
+        }
+        if (recipients != null) {
+            recipients.forEach(this::addRecipient);
         }
     }
 
-    public NotificationSourceType getSourceType() {
-        return sourceType;
-    }
-
-    public void setSourceType(NotificationSourceType sourceType) {
-        this.sourceType = sourceType;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getActionUrl() {
-        return actionUrl;
-    }
-
-    public void setActionUrl(String actionUrl) {
-        this.actionUrl = actionUrl;
-    }
-
-    public Long getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public LocalDateTime getRetentionUntil() {
-        return retentionUntil;
-    }
-
-    public void setRetentionUntil(LocalDateTime retentionUntil) {
-        this.retentionUntil = retentionUntil;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public List<NotificationTarget> getTargets() {
-        return targets;
+        return Collections.unmodifiableList(targets);
     }
 
-    public void setTargets(List<NotificationTarget> targets) {
-        this.targets = targets;
+    public void addTarget(NotificationTarget target) {
+        if (target == null) {
+            return;
+        }
+        target.assignNotification(this);
+        this.targets.add(target);
     }
 
     public List<NotificationRecipient> getRecipients() {
-        return recipients;
+        return Collections.unmodifiableList(recipients);
     }
 
-    public void setRecipients(List<NotificationRecipient> recipients) {
-        this.recipients = recipients;
+    public void addRecipient(NotificationRecipient recipient) {
+        if (recipient == null) {
+            return;
+        }
+        recipient.assignNotification(this);
+        this.recipients.add(recipient);
     }
 }

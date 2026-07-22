@@ -4,6 +4,7 @@ import com.alphatragen.notification.domain.*;
 import com.alphatragen.notification.repository.NotificationRecipientRepository;
 import com.alphatragen.notification.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Tag("integration")
 class NotificationUserServiceTest {
 
     @Autowired
@@ -43,30 +45,32 @@ class NotificationUserServiceTest {
     }
 
     private Notification createNotification(String eventId, NotificationImportance importance, LocalDateTime retentionUntil) {
-        Notification notification = new Notification();
-        notification.setEventId(eventId);
-        notification.setImportance(importance);
-        notification.setSourceType(NotificationSourceType.DOMAIN);
-        notification.setTitle("Title: " + eventId);
-        notification.setContent("Content: " + eventId);
-        notification.setRetentionUntil(retentionUntil);
+        Notification notification = Notification.builder()
+                .eventId(eventId)
+                .importance(importance)
+                .sourceType(NotificationSourceType.DOMAIN)
+                .title("Title: " + eventId)
+                .content("Content: " + eventId)
+                .retentionUntil(retentionUntil)
+                .build();
         return notificationRepository.save(notification);
     }
 
     private void addTarget(Notification notification, Long apartmentId) {
-        NotificationTarget target = new NotificationTarget();
-        target.setNotification(notification);
-        target.setTargetType(NotificationTargetType.APARTMENT);
-        target.setApartmentId(apartmentId);
-        notification.getTargets().add(target);
+        NotificationTarget target = NotificationTarget.builder()
+                .targetType(NotificationTargetType.APARTMENT)
+                .apartmentId(apartmentId)
+                .build();
+        notification.addTarget(target);
         notificationRepository.save(notification);
     }
 
     private NotificationRecipient addRecipient(Notification notification, Long userId) {
-        NotificationRecipient recipient = new NotificationRecipient();
-        recipient.setNotification(notification);
-        recipient.setRecipientUserId(userId);
-        recipient.setRead(false);
+        NotificationRecipient recipient = NotificationRecipient.builder()
+                .notification(notification)
+                .recipientUserId(userId)
+                .read(false)
+                .build();
         return recipientRepository.save(recipient);
     }
 
@@ -88,7 +92,7 @@ class NotificationUserServiceTest {
         Notification n4 = createNotification("evt4", NotificationImportance.NORMAL, LocalDateTime.now().plusDays(5));
         addTarget(n4, apt1Id);
         NotificationRecipient r4 = addRecipient(n4, user1Id);
-        r4.setRead(true);
+        r4.markAsRead(LocalDateTime.now());
         recipientRepository.save(r4); // Active Read
 
         Notification n5 = createNotification("evt5", NotificationImportance.NORMAL, LocalDateTime.now().plusDays(5));
@@ -119,7 +123,7 @@ class NotificationUserServiceTest {
         Notification n2 = createNotification("evt2", NotificationImportance.NORMAL, LocalDateTime.now().plusDays(5));
         addTarget(n2, apt1Id);
         NotificationRecipient r2 = addRecipient(n2, user1Id);
-        r2.setRead(true);
+        r2.markAsRead(LocalDateTime.now());
         recipientRepository.save(r2); // Active Read
 
         Notification n3 = createNotification("evt3", NotificationImportance.NORMAL, LocalDateTime.now().minusDays(1));

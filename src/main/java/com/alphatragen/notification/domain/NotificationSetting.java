@@ -1,10 +1,23 @@
 package com.alphatragen.notification.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
+/**
+ * 아파트별 알림 보관 정책을 저장하는 엔티티입니다.
+ *
+ * notification_setting 테이블에 아파트별 보관 기간과 최종 수정 정보를 저장하며,
+ * apartment_id를 unique로 두어 아파트마다 하나의 설정만 유지합니다.
+ */
 @Entity
 @Table(name = "notification_setting")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationSetting {
 
     @Id
@@ -23,49 +36,25 @@ public class NotificationSetting {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    public NotificationSetting() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
+    @Builder
+    private NotificationSetting(Long id, Long apartmentId, Integer retentionDays, Long updatedBy, LocalDateTime updatedAt) {
         this.id = id;
-    }
-
-    public Long getApartmentId() {
-        return apartmentId;
-    }
-
-    public void setApartmentId(Long apartmentId) {
         this.apartmentId = apartmentId;
+        this.retentionDays = retentionDays == null ? 90 : retentionDays;
+        this.updatedBy = updatedBy;
+        this.updatedAt = updatedAt == null ? LocalDateTime.now() : updatedAt;
     }
 
-    public int getRetentionDays() {
-        return retentionDays;
+    public void updateRetention(int retentionDays, Long updatedBy, LocalDateTime updatedAt) {
+        validateRetentionDays(retentionDays);
+        this.retentionDays = retentionDays;
+        this.updatedBy = updatedBy;
+        this.updatedAt = updatedAt;
     }
 
-    public void setRetentionDays(int retentionDays) {
+    private static void validateRetentionDays(int retentionDays) {
         if (retentionDays < 30 || retentionDays > 365) {
             throw new IllegalArgumentException("Retention days must be between 30 and 365 days");
         }
-        this.retentionDays = retentionDays;
-    }
-
-    public Long getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(Long updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

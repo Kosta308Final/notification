@@ -34,7 +34,10 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
     implementation 'org.bitbucket.b_c:jose4j:0.9.6'
-    implementation 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'com.h2database:h2'
@@ -50,4 +53,48 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'kafka'
+    }
+}
+
+tasks.register('unitTest', Test) {
+    description = 'Runs pure unit tests only.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        excludeTags 'jpa', 'integration', 'kafka'
+    }
+}
+
+tasks.register('jpaTest', Test) {
+    description = 'Runs JPA repository tests only.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'jpa'
+    }
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs Spring integration tests excluding Kafka.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'integration'
+        excludeTags 'kafka'
+    }
+}
+
+tasks.register('kafkaTest', Test) {
+    description = 'Runs Kafka integration tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'kafka'
+    }
 }

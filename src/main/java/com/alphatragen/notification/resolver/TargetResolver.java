@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface TargetResolver {
     boolean supports(NotificationTargetType targetType);
-    List<Long> resolve(Long apartmentId, Long userId, String building, String unit, String role);
+    List<Long> resolve(TargetCondition condition);
 }

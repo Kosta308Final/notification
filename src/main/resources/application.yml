@@ -1,3 +1,7 @@
+# Common configuration.
+# - Required secrets have no fallback: JWT_SECRET, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY.
+# - Optional runtime values use environment-variable fallbacks suitable for local development.
+# - Profile files should only override infrastructure or test-specific values.
 server:
   port: ${PORT:8081}
 
@@ -8,14 +12,27 @@ spring:
     import:
       - optional:file:.env[.properties]
       - optional:file:notification/.env[.properties]
+  kafka:
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties: {}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 jwt:
   secret: ${JWT_SECRET}
 
 app:
+  backend:
+    base-url: ${BACKEND_BASE_URL:http://localhost:8080}
+    internal-token: ${BACKEND_INTERNAL_TOKEN:local-notification-service-token}
   vapid:
-    public-key: ${VAPID_PUBLIC_KEY:BCJqbgnMJBUSN4VChYAQ1XmHeCy1-dL8EXhr1urZw5pP-RUnIluVV-q3sbw7yUyAfSt24r9pzFjgpW-bia0b8lA}
-    private-key: ${VAPID_PRIVATE_KEY:UaO5mP8qEqr3KJsUFGIiwhFV09lpQAKbSDIQJQDKLhM}
+    public-key: ${VAPID_PUBLIC_KEY}
+    private-key: ${VAPID_PRIVATE_KEY}
     subject: ${VAPID_SUBJECT:mailto:admin@apartment.com}
   retention:
     default-days: ${DEFAULT_RETENTION_DAYS:90}

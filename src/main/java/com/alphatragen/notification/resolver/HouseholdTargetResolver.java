@@ -20,10 +20,12 @@ public class HouseholdTargetResolver implements TargetResolver {
     }
 
     @Override
-    public List<Long> resolve(Long apartmentId, Long userId, String building, String unit, String role) {
+    public List<Long> resolve(TargetCondition condition) {
+        String building = condition.building();
+        String unit = condition.unit();
         if (building == null || building.isBlank() || unit == null || unit.isBlank()) {
             throw new IllegalArgumentException("building and unit are required for HOUSEHOLD target type");
         }
-        return userServiceClient.findUsersByHousehold(apartmentId, building, unit);
+        return userServiceClient.findUsersByHousehold(condition.apartmentId(), building, unit);
     }
 }

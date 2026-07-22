@@ -31,7 +31,7 @@ public class NotificationEventDto {
     private String role;
     private Map<String, String> templateData;
 
-    @Pattern(regexp = "^/[a-zA-Z0-9_/-]*$", message = "actionUrl must be a relative internal path")
+    @Pattern(regexp = "^/[a-zA-Z0-9_/#-]*$", message = "actionUrl must be a relative internal path")
     private String actionUrl;
 
     public NotificationEventDto() {

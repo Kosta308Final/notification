@@ -2,7 +2,6 @@ package com.alphatragen.notification.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -15,11 +14,15 @@ public class KafkaConfig {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaConfig.class);
 
-    @Value("${app.kafka.retry-backoff-ms:1000}")
-    private long retryBackoffMs;
+    private final NotificationProperties.Kafka kafka;
+
+    public KafkaConfig(NotificationProperties properties) {
+        this.kafka = properties.kafka();
+    }
 
     @Bean
     public DefaultErrorHandler errorHandler() {
+        long retryBackoffMs = kafka.retryBackoffMs();
         log.info("Configuring Kafka DefaultErrorHandler with retryBackoffMs: {}", retryBackoffMs);
         // 2 retries (total 3 attempts)
         FixedBackOff backOff = new FixedBackOff(retryBackoffMs, 2);

@@ -8,6 +8,7 @@ import com.alphatragen.notification.dto.RecipientPreviewRespDto;
 import com.alphatragen.notification.repository.NotificationRepository;
 import com.alphatragen.notification.repository.NotificationSettingRepository;
 import com.alphatragen.notification.resolver.NotificationTargetResolverComposite;
+import com.alphatragen.notification.resolver.TargetCondition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,6 +24,8 @@ class NotificationAdminServiceTest {
     private NotificationTargetResolverComposite resolver;
     private NotificationRepository notificationRepository;
     private NotificationSettingRepository settingRepository;
+    private NotificationFactory notificationFactory;
+    private NotificationRecipientCreator notificationRecipientCreator;
     private ApplicationEventPublisher eventPublisher;
     private NotificationAdminService service;
 
@@ -31,14 +34,17 @@ class NotificationAdminServiceTest {
         resolver = mock(NotificationTargetResolverComposite.class);
         notificationRepository = mock(NotificationRepository.class);
         settingRepository = mock(NotificationSettingRepository.class);
+        notificationFactory = new NotificationFactory(settingRepository, mock(com.alphatragen.notification.template.NotificationTemplateService.class));
+        notificationRecipientCreator = new NotificationRecipientCreator(resolver);
         eventPublisher = mock(ApplicationEventPublisher.class);
-        service = new NotificationAdminService(resolver, notificationRepository, settingRepository, eventPublisher);
+        service = new NotificationAdminService(resolver, notificationRepository, settingRepository,
+                notificationFactory, notificationRecipientCreator, eventPublisher);
     }
 
     @Test
     void previewDeduplicatesAndReturnsRecipientCount() {
         ManualNotificationReqDto request = request(NotificationTargetType.APARTMENT);
-        when(resolver.resolveTargets(any(), eq(1L), isNull(), isNull(), isNull(), isNull())).thenReturn(List.of(10L, 20L));
+        when(resolver.resolveTargets(any(TargetCondition.class))).thenReturn(List.of(10L, 20L));
 
         RecipientPreviewRespDto result = service.preview(request, 1L, "OFFICE_ADMIN");
 
@@ -48,12 +54,9 @@ class NotificationAdminServiceTest {
 
     @Test
     void sendStoresManualNotificationAndPublishesPushEvent() {
-        ManualNotificationReqDto request = request(NotificationTargetType.INDIVIDUAL);
-        request.setUserId(10L);
-        request.setTitle("점검 안내");
-        request.setContent("내일 점검합니다.");
-        request.setImportance(NotificationImportance.URGENT);
-        when(resolver.resolveTargets(any(), any(), any(), any(), any(), any())).thenReturn(List.of(10L));
+        ManualNotificationReqDto request = new ManualNotificationReqDto(1L, NotificationTargetType.INDIVIDUAL, 10L,
+                null, null, null, NotificationImportance.URGENT, "title", "content", null, null);
+        when(resolver.resolveTargets(any(TargetCondition.class))).thenReturn(List.of(10L));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Notification saved = service.send(request, 99L, 1L, "ADMIN");
@@ -73,9 +76,7 @@ class NotificationAdminServiceTest {
     }
 
     private ManualNotificationReqDto request(NotificationTargetType type) {
-        ManualNotificationReqDto request = new ManualNotificationReqDto();
-        request.setApartmentId(1L);
-        request.setTargetType(type);
-        return request;
+        return new ManualNotificationReqDto(1L, type, null, null, null, null,
+                NotificationImportance.NORMAL, null, null, null, null);
     }
 }

@@ -104,4 +104,20 @@ class NotificationEventDtoTest {
         Set<ConstraintViolation<NotificationEventDto>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
+
+    @Test
+    void testCommentFragmentActionUrlIsValid() {
+        NotificationEventDto dto = new NotificationEventDto(
+                "evt-123",
+                NotificationEventType.POST_COMMENT_CREATED,
+                LocalDateTime.now(),
+                1L,
+                NotificationTargetType.INDIVIDUAL
+        );
+        dto.setUserId(100L);
+        dto.setActionUrl("/board/posts/25#comment-7");
+
+        Set<ConstraintViolation<NotificationEventDto>> violations = validator.validate(dto);
+        assertTrue(violations.isEmpty());
+    }
 }

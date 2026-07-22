@@ -36,7 +36,7 @@ class NotificationTargetResolverCompositeTest {
         when(userServiceClient.findUsersByIndividual(1L, 100L))
                 .thenReturn(Collections.singletonList(100L));
 
-        List<Long> result = compositeResolver.resolveTargets(NotificationTargetType.INDIVIDUAL, 1L, 100L, null, null, null);
+        List<Long> result = compositeResolver.resolveTargets(new TargetCondition(NotificationTargetType.INDIVIDUAL, 1L, 100L, null, null, null));
 
         assertEquals(1, result.size());
         assertEquals(100L, result.get(0));
@@ -46,7 +46,7 @@ class NotificationTargetResolverCompositeTest {
     @Test
     void testResolveIndividualThrowsExceptionWhenUserIdNull() {
         assertThrows(IllegalArgumentException.class, () -> {
-            compositeResolver.resolveTargets(NotificationTargetType.INDIVIDUAL, 1L, null, null, null, null);
+            compositeResolver.resolveTargets(new TargetCondition(NotificationTargetType.INDIVIDUAL, 1L, null, null, null, null));
         });
     }
 
@@ -55,7 +55,7 @@ class NotificationTargetResolverCompositeTest {
         when(userServiceClient.findUsersByHousehold(1L, "101동", "102호"))
                 .thenReturn(Arrays.asList(100L, 200L));
 
-        List<Long> result = compositeResolver.resolveTargets(NotificationTargetType.HOUSEHOLD, 1L, null, "101동", "102호", null);
+        List<Long> result = compositeResolver.resolveTargets(new TargetCondition(NotificationTargetType.HOUSEHOLD, 1L, null, "101동", "102호", null));
 
         assertEquals(2, result.size());
         assertTrue(result.contains(100L));
@@ -68,7 +68,7 @@ class NotificationTargetResolverCompositeTest {
         when(userServiceClient.findUsersByBuilding(1L, "101동"))
                 .thenReturn(Arrays.asList(100L, 200L, 300L));
 
-        List<Long> result = compositeResolver.resolveTargets(NotificationTargetType.BUILDING, 1L, null, "101동", null, null);
+        List<Long> result = compositeResolver.resolveTargets(new TargetCondition(NotificationTargetType.BUILDING, 1L, null, "101동", null, null));
 
         assertEquals(3, result.size());
         verify(userServiceClient).findUsersByBuilding(1L, "101동");
@@ -79,7 +79,7 @@ class NotificationTargetResolverCompositeTest {
         when(userServiceClient.findUsersByRole(1L, "REPRESENTATIVE"))
                 .thenReturn(Arrays.asList(100L, 300L));
 
-        List<Long> result = compositeResolver.resolveTargets(NotificationTargetType.ROLE, 1L, null, null, null, "REPRESENTATIVE");
+        List<Long> result = compositeResolver.resolveTargets(new TargetCondition(NotificationTargetType.ROLE, 1L, null, null, null, "REPRESENTATIVE"));
 
         assertEquals(2, result.size());
         verify(userServiceClient).findUsersByRole(1L, "REPRESENTATIVE");
@@ -90,7 +90,7 @@ class NotificationTargetResolverCompositeTest {
         when(userServiceClient.findUsersByApartment(1L))
                 .thenReturn(Arrays.asList(100L, 200L, 300L, 400L));
 
-        List<Long> result = compositeResolver.resolveTargets(NotificationTargetType.APARTMENT, 1L, null, null, null, null);
+        List<Long> result = compositeResolver.resolveTargets(new TargetCondition(NotificationTargetType.APARTMENT, 1L, null, null, null, null));
 
         assertEquals(4, result.size());
         verify(userServiceClient).findUsersByApartment(1L);
@@ -101,7 +101,7 @@ class NotificationTargetResolverCompositeTest {
         when(userServiceClient.findUsersByApartment(1L))
                 .thenReturn(Arrays.asList(100L, 100L, null, 200L, 200L));
 
-        List<Long> result = compositeResolver.resolveTargets(NotificationTargetType.APARTMENT, 1L, null, null, null, null);
+        List<Long> result = compositeResolver.resolveTargets(new TargetCondition(NotificationTargetType.APARTMENT, 1L, null, null, null, null));
 
         assertEquals(2, result.size());
         assertTrue(result.contains(100L));

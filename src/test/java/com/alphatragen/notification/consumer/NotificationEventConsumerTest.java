@@ -5,12 +5,15 @@ import com.alphatragen.notification.domain.NotificationEventType;
 import com.alphatragen.notification.domain.NotificationTargetType;
 import com.alphatragen.notification.dto.NotificationEventDto;
 import com.alphatragen.notification.repository.NotificationRepository;
+import com.alphatragen.notification.resolver.NotificationTargetResolverComposite;
 import com.alphatragen.notification.service.NotificationApplicationService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -25,6 +28,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,6 +44,7 @@ import static org.mockito.Mockito.verify;
 @Testcontainers
 @ActiveProfiles("test")
 @DirtiesContext
+@Tag("kafka")
 public class NotificationEventConsumerTest {
 
     @Container
@@ -59,10 +64,16 @@ public class NotificationEventConsumerTest {
     private NotificationRepository notificationRepository;
 
     @Autowired
+    private com.alphatragen.notification.repository.NotificationRecipientRepository recipientRepository;
+
+    @Autowired
     private com.alphatragen.notification.repository.PushSubscriptionRepository pushSubscriptionRepository;
 
     @MockitoSpyBean
     private NotificationApplicationService notificationApplicationService;
+
+    @MockitoBean
+    private NotificationTargetResolverComposite targetResolverComposite;
 
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
@@ -71,6 +82,9 @@ public class NotificationEventConsumerTest {
     void setUp() {
         notificationRepository.deleteAll();
         pushSubscriptionRepository.deleteAll();
+        Mockito.reset(targetResolverComposite, notificationApplicationService);
+        Mockito.when(targetResolverComposite.resolveTargets(any()))
+                .thenReturn(List.of(100L, 101L));
     }
 
     @Test
@@ -92,7 +106,7 @@ public class NotificationEventConsumerTest {
         await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
             Optional<Notification> opt = notificationRepository.findByEventId(eventId);
             assertThat(opt).isPresent();
-            assertThat(opt.get().getTitle()).contains("민원 처리 상태");
+            assertThat(opt.get().getTitle()).isEqualTo("Complaint status updated");
         });
     }
 
@@ -122,12 +136,13 @@ public class NotificationEventConsumerTest {
         String eventId = UUID.randomUUID().toString();
         NotificationEventDto dto = new NotificationEventDto(
                 eventId,
-                NotificationEventType.URGENT_NOTICE,
+                NotificationEventType.NOTICE_CREATED,
                 LocalDateTime.now(),
                 1L,
                 NotificationTargetType.APARTMENT
         );
         dto.setTemplateData(Map.of("noticeTitle", "Urgent Maintenance", "noticeContent", "Water shutdown"));
+        dto.setActionUrl("/notice/99");
 
         // Send duplicate messages
         kafkaTemplate.send("notification-events", eventId, dto);
@@ -136,6 +151,12 @@ public class NotificationEventConsumerTest {
         await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
             Optional<Notification> opt = notificationRepository.findByEventId(eventId);
             assertThat(opt).isPresent();
+            assertThat(opt.get().getActionUrl()).isEqualTo("/notice/99");
+            assertThat(recipientRepository.findAll().stream()
+                    .filter(recipient -> recipient.getNotification().getId().equals(opt.get().getId()))
+                    .toList())
+                    .extracting(com.alphatragen.notification.domain.NotificationRecipient::getRecipientUserId)
+                    .containsExactlyInAnyOrder(100L, 101L);
         });
 
         // Let's check that verify on service call wait or sleep
@@ -176,18 +197,20 @@ public class NotificationEventConsumerTest {
         String eventId = UUID.randomUUID().toString();
         
         // Save initial subscription
-        com.alphatragen.notification.domain.PushSubscription sub = new com.alphatragen.notification.domain.PushSubscription();
-        sub.setUserId(100L);
-        sub.setApartmentId(1L);
-        sub.setEndpoint("https://fcm.googleapis.com/fcm/send/withdraw-test");
-        sub.setP256dh("p256");
-        sub.setAuth("auth");
-        sub.setActive(true);
+        com.alphatragen.notification.domain.PushSubscription sub =
+                com.alphatragen.notification.domain.PushSubscription.builder()
+                        .userId(100L)
+                        .apartmentId(1L)
+                        .endpoint("https://fcm.googleapis.com/fcm/send/withdraw-test")
+                        .p256dh("p256")
+                        .auth("auth")
+                        .active(true)
+                        .build();
         pushSubscriptionRepository.save(sub);
         
         NotificationEventDto dto = new NotificationEventDto(
                 eventId,
-                NotificationEventType.USER_WITHDRAWAL,
+                NotificationEventType.USER_WITHDRAWN,
                 LocalDateTime.now(),
                 1L,
                 NotificationTargetType.INDIVIDUAL

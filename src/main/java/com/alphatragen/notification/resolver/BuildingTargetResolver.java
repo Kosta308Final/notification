@@ -20,10 +20,11 @@ public class BuildingTargetResolver implements TargetResolver {
     }
 
     @Override
-    public List<Long> resolve(Long apartmentId, Long userId, String building, String unit, String role) {
+    public List<Long> resolve(TargetCondition condition) {
+        String building = condition.building();
         if (building == null || building.isBlank()) {
             throw new IllegalArgumentException("building is required for BUILDING target type");
         }
-        return userServiceClient.findUsersByBuilding(apartmentId, building);
+        return userServiceClient.findUsersByBuilding(condition.apartmentId(), building);
     }
 }

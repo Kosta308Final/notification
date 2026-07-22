@@ -3,6 +3,7 @@ package com.alphatragen.notification.service;
 import com.alphatragen.notification.domain.PushSubscription;
 import com.alphatragen.notification.repository.PushSubscriptionRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Tag("integration")
 class PushSubscriptionServiceTest {
 
     @Autowired
