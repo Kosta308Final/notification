@@ -86,7 +86,7 @@ public enum NotificationTemplate {
     ),
     NOTICE_CREATED(
             NotificationEventType.NOTICE_CREATED,
-            "[Urgent] {noticeTitle}",
+            "{noticeTitle}",
             "{noticeContent}",
             List.of("noticeTitle", "noticeContent")
     ),

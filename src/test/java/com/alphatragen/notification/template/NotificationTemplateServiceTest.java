@@ -59,7 +59,7 @@ class NotificationTemplateServiceTest {
                 Map.of("noticeTitle", "Water outage", "noticeContent", "Water is unavailable from 2 PM to 4 PM.")
         );
 
-        assertEquals("[Urgent] Water outage", result.getTitle());
+        assertEquals("Water outage", result.getTitle());
         assertEquals("Water is unavailable from 2 PM to 4 PM.", result.getContent());
     }
 
