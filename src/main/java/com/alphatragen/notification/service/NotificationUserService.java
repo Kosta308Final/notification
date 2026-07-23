@@ -29,6 +29,12 @@ public class NotificationUserService {
         return recipientRepository.countUnreadNotifications(userId, apartmentId, LocalDateTime.now());
     }
 
+    public Page<NotificationRecipient> getNotificationsAfter(Long userId, Long apartmentId,
+                                                              Long afterNotificationId, Pageable pageable) {
+        return recipientRepository.findNotificationsAfter(userId, apartmentId, afterNotificationId,
+                LocalDateTime.now(), pageable);
+    }
+
     @Transactional
     public NotificationRecipient markAsRead(Long id, Long userId) {
         NotificationRecipient recipient = recipientRepository.findById(id)

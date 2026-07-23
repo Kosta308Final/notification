@@ -9,7 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping({"/api/admin/notifications/settings", "/api/admin/notification-settings"})
+@RequestMapping({"/api/notifications/settings", "/api/admin/notifications/settings", "/api/admin/notification-settings"})
 public class NotificationSettingController {
     private final NotificationSettingService service;
 
@@ -19,13 +19,13 @@ public class NotificationSettingController {
 
     @GetMapping
     public NotificationSettingRespDto get(@CurrentUser JwtUserClaims claims) {
-        return service.get(claims.apartmentId());
+        return service.getForUser(claims.userId(), claims.apartmentId());
     }
 
     @PutMapping
     public NotificationSettingRespDto update(
             @Valid @RequestBody NotificationSettingUpdateReqDto request,
             @CurrentUser JwtUserClaims claims) {
-        return service.update(claims.apartmentId(), request.retentionDays(), claims.userId(), claims.apartmentId(), String.join(",", claims.roles()));
+            return service.updateForUser(claims.userId(), claims.apartmentId(), request);
     }
 }

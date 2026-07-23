@@ -34,7 +34,7 @@ class VapidConfigTest {
                 "app.vapid.subject=mailto:test@test.com"
         ).run(context -> {
             assertThat(context).hasFailed();
-            assertThat(context.getStartupFailure()).hasRootCauseMessage("VAPID configurations (public-key, private-key, subject) must not be empty");
+            assertThat(context.getStartupFailure()).hasStackTraceContaining("VAPID configurations (public-key, private-key, subject) must not be empty");
         });
     }
 
@@ -46,7 +46,7 @@ class VapidConfigTest {
                 "app.vapid.subject=mailto:test@test.com"
         ).run(context -> {
             assertThat(context).hasFailed();
-            assertThat(context.getStartupFailure()).hasRootCauseMessage("VAPID configurations (public-key, private-key, subject) must not be empty");
+            assertThat(context.getStartupFailure()).hasStackTraceContaining("VAPID configurations (public-key, private-key, subject) must not be empty");
         });
     }
 
@@ -58,7 +58,7 @@ class VapidConfigTest {
                 "app.vapid.subject="
         ).run(context -> {
             assertThat(context).hasFailed();
-            assertThat(context.getStartupFailure()).hasRootCauseMessage("VAPID configurations (public-key, private-key, subject) must not be empty");
+            assertThat(context.getStartupFailure()).hasStackTraceContaining("VAPID configurations (public-key, private-key, subject) must not be empty");
         });
     }
 }

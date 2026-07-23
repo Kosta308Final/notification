@@ -68,14 +68,14 @@ public class NotificationAdminService {
         request.validateForSend();
         List<Long> ids = resolve(request);
         int retentionDays = request.retentionDays() != null ? request.retentionDays()
-                : settingRepository.findByApartmentId(request.apartmentId()).map(NotificationSetting::getRetentionDays).orElse(DEFAULT_RETENTION_DAYS);
+                : settingRepository.findByApartmentIdAndUserIdIsNull(request.apartmentId()).map(NotificationSetting::getRetentionDays).orElse(DEFAULT_RETENTION_DAYS);
 
         Notification notification = notificationFactory.createManual(request, adminUserId, retentionDays);
         notificationRecipientCreator.create(notification, ids);
         Notification saved = notificationRepository.save(notification);
         log.info("notification_manual_created eventId={} apartmentId={} adminUserId={} recipientCount={}",
                 saved.getEventId(), request.apartmentId(), adminUserId, ids.size());
-        if (!ids.isEmpty()) eventPublisher.publishEvent(new NotificationCreatedEvent(saved.getId(), ids, saved.getTitle(), saved.getContent(), saved.getActionUrl()));
+        if (!ids.isEmpty()) eventPublisher.publishEvent(new NotificationCreatedEvent(saved.getId(), ids, saved.getTargets().get(0).getApartmentId(), saved.getTitle(), saved.getContent(), saved.getActionUrl(), saved.getEventId(), saved.getImportance(), saved.getCreatedAt()));
         return saved;
     }
 

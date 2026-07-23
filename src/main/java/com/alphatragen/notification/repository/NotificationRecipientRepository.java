@@ -36,6 +36,19 @@ public interface NotificationRecipientRepository extends JpaRepository<Notificat
             Pageable pageable
     );
 
+    @Query("SELECT r FROM NotificationRecipient r JOIN r.notification n " +
+           "WHERE r.recipientUserId = :recipientUserId " +
+           "AND n.id > :afterNotificationId " +
+           "AND EXISTS (SELECT 1 FROM NotificationTarget t WHERE t.notification = n AND t.apartmentId = :apartmentId) " +
+           "AND n.retentionUntil > :now ORDER BY n.id ASC")
+    Page<NotificationRecipient> findNotificationsAfter(
+            @Param("recipientUserId") Long recipientUserId,
+            @Param("apartmentId") Long apartmentId,
+            @Param("afterNotificationId") Long afterNotificationId,
+            @Param("now") LocalDateTime now,
+            Pageable pageable
+    );
+
     @Query("SELECT COUNT(r) FROM NotificationRecipient r " +
            "JOIN r.notification n " +
            "WHERE r.recipientUserId = :recipientUserId " +

@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface NotificationSettingRepository extends JpaRepository<NotificationSetting, Long> {
     Optional<NotificationSetting> findByApartmentId(Long apartmentId);
+    Optional<NotificationSetting> findByApartmentIdAndUserIdIsNull(Long apartmentId);
+    Optional<NotificationSetting> findByUserIdAndApartmentId(Long userId, Long apartmentId);
 }

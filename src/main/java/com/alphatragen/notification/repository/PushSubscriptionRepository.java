@@ -8,5 +8,6 @@ import java.util.Optional;
 public interface PushSubscriptionRepository extends JpaRepository<PushSubscription, Long> {
     Optional<PushSubscription> findByEndpoint(String endpoint);
     List<PushSubscription> findByUserIdAndIsActiveTrue(Long userId);
+    List<PushSubscription> findByUserIdAndApartmentIdAndIsActiveTrue(Long userId, Long apartmentId);
     List<PushSubscription> findByUserId(Long userId);
 }

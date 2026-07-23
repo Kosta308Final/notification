@@ -53,6 +53,19 @@ public class WebPushSender implements PushSender {
     public void sendPush(Long notificationId, Long recipientUserId, String title, String content, String actionUrl) {
         List<PushSubscription> activeSubscriptions =
                 pushSubscriptionRepository.findByUserIdAndIsActiveTrue(recipientUserId);
+        sendToSubscriptions(notificationId, recipientUserId, title, content, actionUrl, activeSubscriptions);
+    }
+
+    @Override
+    public void sendPush(Long notificationId, Long recipientUserId, Long apartmentId,
+                         String title, String content, String actionUrl) {
+        List<PushSubscription> activeSubscriptions =
+                pushSubscriptionRepository.findByUserIdAndApartmentIdAndIsActiveTrue(recipientUserId, apartmentId);
+        sendToSubscriptions(notificationId, recipientUserId, title, content, actionUrl, activeSubscriptions);
+    }
+
+    private void sendToSubscriptions(Long notificationId, Long recipientUserId, String title, String content,
+                                     String actionUrl, List<PushSubscription> activeSubscriptions) {
         if (activeSubscriptions.isEmpty()) {
             log.info("No active push subscriptions found for user: {}", recipientUserId);
             return;

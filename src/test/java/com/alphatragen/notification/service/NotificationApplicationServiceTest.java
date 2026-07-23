@@ -149,7 +149,7 @@ class NotificationApplicationServiceTest {
                 .thenReturn(Collections.singletonList(100L));
 
         doThrow(new RuntimeException("Push server error"))
-                .when(pushSender).sendPush(anyLong(), anyLong(), any(), any(), any());
+                .when(pushSender).sendPush(anyLong(), anyLong(), anyLong(), any(), any(), any());
 
         Notification result = assertDoesNotThrow(() -> notificationApplicationService.createNotification(dto));
 
@@ -175,12 +175,12 @@ class NotificationApplicationServiceTest {
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive(),
                     "Push sending must be executed AFTER transaction commit");
             return null;
-        }).when(pushSender).sendPush(anyLong(), anyLong(), any(), any(), any());
+        }).when(pushSender).sendPush(anyLong(), anyLong(), anyLong(), any(), any(), any());
 
         Notification result = notificationApplicationService.createNotification(dto);
 
         assertNotNull(result.getId());
-        verify(pushSender, times(1)).sendPush(eq(result.getId()), eq(100L), any(), any(), any());
+        verify(pushSender, times(1)).sendPush(eq(result.getId()), eq(100L), eq(1L), any(), any(), any());
     }
 
     @Test
@@ -235,7 +235,7 @@ class NotificationApplicationServiceTest {
         assertEquals("2026-07 maintenance fee payment of 185000 has been confirmed.", result.getContent());
         assertEquals("/maintenance-fees/900", result.getActionUrl());
         assertEquals(2, result.getRecipients().size());
-        verify(pushSender).sendPush(result.getId(), 100L, result.getTitle(), result.getContent(), result.getActionUrl());
-        verify(pushSender).sendPush(result.getId(), 101L, result.getTitle(), result.getContent(), result.getActionUrl());
+        verify(pushSender).sendPush(result.getId(), 100L, 1L, result.getTitle(), result.getContent(), result.getActionUrl());
+        verify(pushSender).sendPush(result.getId(), 101L, 1L, result.getTitle(), result.getContent(), result.getActionUrl());
     }
 }
