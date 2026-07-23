@@ -57,8 +57,8 @@ public class DesktopDeviceService {
         return repository.save(device);
     }
 
-    public void deactivate(Long userId, String deviceId) {
-        DesktopDevice device = findOwnedDevice(userId, deviceId);
+    public void deactivate(Long userId, Long apartmentId, String deviceId) {
+        DesktopDevice device = findOwnedDevice(userId, apartmentId, deviceId);
         device.deactivate();
         repository.save(device);
         if (realtimeConnectionService != null) {
@@ -66,10 +66,19 @@ public class DesktopDeviceService {
         }
     }
 
-    public void heartbeat(Long userId, String deviceId) {
-        DesktopDevice device = findOwnedDevice(userId, deviceId);
+    public void heartbeat(Long userId, Long apartmentId, String deviceId) {
+        DesktopDevice device = findOwnedDevice(userId, apartmentId, deviceId);
         device.heartbeat(LocalDateTime.now());
         repository.save(device);
+    }
+
+    private DesktopDevice findOwnedDevice(Long userId, Long apartmentId, String deviceId) {
+        DesktopDevice device = repository.findByDeviceId(deviceId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
+        if (!device.getUserId().equals(userId) || !device.getApartmentId().equals(apartmentId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Device belongs to another user or apartment");
+        }
+        return device;
     }
 
     private DesktopDevice findOwnedDevice(Long userId, String deviceId) {

@@ -69,9 +69,6 @@ public class EventDeserializer {
             throw new IllegalArgumentException("eventType is required");
         }
         return switch (value.toUpperCase()) {
-//            case "VOTE_END_IMMINENT" -> NotificationEventType.VOTE_END_IMMINENT;
-//            case "NOTICE_CREATED" -> NotificationEventType.NOTICE_CREATED;
-//            case "USER_WITHDRAWN" -> NotificationEventType.USER_WITHDRAWN;
             default -> NotificationEventType.fromValue(value);
         };
     }

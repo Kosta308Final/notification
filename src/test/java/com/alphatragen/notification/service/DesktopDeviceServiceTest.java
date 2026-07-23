@@ -79,7 +79,7 @@ class DesktopDeviceServiceTest {
         when(repository.findByDeviceId("device-1")).thenReturn(Optional.of(existing));
         when(repository.save(existing)).thenReturn(existing);
 
-        service.deactivate(7L, "device-1");
+        service.deactivate(7L, 3L, "device-1");
 
         assertFalse(existing.isActive());
     }
@@ -92,7 +92,7 @@ class DesktopDeviceServiceTest {
         when(repository.findByDeviceId("device-1")).thenReturn(Optional.of(existing));
         when(repository.save(existing)).thenReturn(existing);
 
-        service.heartbeat(7L, "device-1");
+        service.heartbeat(7L, 3L, "device-1");
 
         assertTrue(existing.isActive());
     }

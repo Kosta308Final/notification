@@ -19,6 +19,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.security.Security;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,6 +36,9 @@ class WebPushSenderTest {
 
     @BeforeEach
     void setUp() {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
         pushSubscriptionRepository = mock(PushSubscriptionRepository.class);
         notificationRepository = mock(NotificationRepository.class);
         pushService = mock(PushService.class);
@@ -42,10 +47,10 @@ class WebPushSenderTest {
 
     @Test
     void whenNoSubscriptionsFound_thenDoNothing() {
-        when(pushSubscriptionRepository.findByUserIdAndIsActiveTrue(1L))
+        when(pushSubscriptionRepository.findByUserIdAndApartmentIdAndIsActiveTrue(1L, 10L))
                 .thenReturn(Collections.emptyList());
 
-        webPushSender.sendPush(10L, 1L, "Title", "Content", "/test");
+        webPushSender.sendPush(10L, 1L, 10L, "Title", "Content", "/test");
 
         verifyNoInteractions(pushService);
         verifyNoInteractions(notificationRepository);
@@ -56,7 +61,7 @@ class WebPushSenderTest {
         PushSubscription sub1 = subscription(101L, "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA");
         PushSubscription sub2 = subscription(102L, "https://fcm.googleapis.com/fcm/send/some_token");
 
-        when(pushSubscriptionRepository.findByUserIdAndIsActiveTrue(1L))
+        when(pushSubscriptionRepository.findByUserIdAndApartmentIdAndIsActiveTrue(1L, 10L))
                 .thenReturn(Arrays.asList(sub1, sub2));
 
         Notification notification = notification(NotificationImportance.URGENT);
@@ -69,7 +74,7 @@ class WebPushSenderTest {
 
         when(pushService.send(any(nl.martijndwars.webpush.Notification.class))).thenReturn(response);
 
-        webPushSender.sendPush(10L, 1L, "Title", "Content", "/test");
+        webPushSender.sendPush(10L, 1L, 10L, "Title", "Content", "/test");
 
         ArgumentCaptor<nl.martijndwars.webpush.Notification> notificationCaptor =
                 ArgumentCaptor.forClass(nl.martijndwars.webpush.Notification.class);
@@ -90,7 +95,7 @@ class WebPushSenderTest {
     void whenSubscriptionIsExpired_thenDeactivateSubscription() throws Exception {
         PushSubscription sub1 = subscription(101L, "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA");
 
-        when(pushSubscriptionRepository.findByUserIdAndIsActiveTrue(1L))
+        when(pushSubscriptionRepository.findByUserIdAndApartmentIdAndIsActiveTrue(1L, 10L))
                 .thenReturn(Collections.singletonList(sub1));
 
         Notification notification = notification(NotificationImportance.NORMAL);
@@ -103,7 +108,7 @@ class WebPushSenderTest {
 
         when(pushService.send(any(nl.martijndwars.webpush.Notification.class))).thenReturn(response410);
 
-        webPushSender.sendPush(10L, 1L, "Title", "Content", "/test");
+        webPushSender.sendPush(10L, 1L, 10L, "Title", "Content", "/test");
 
         verify(pushSubscriptionRepository, times(1)).save(sub1);
         assertThat(sub1.isActive()).isFalse();
@@ -113,7 +118,7 @@ class WebPushSenderTest {
     void whenSubscriptionIsNotFound_thenDeactivateSubscription() throws Exception {
         PushSubscription sub1 = subscription(101L, "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA");
 
-        when(pushSubscriptionRepository.findByUserIdAndIsActiveTrue(1L))
+        when(pushSubscriptionRepository.findByUserIdAndApartmentIdAndIsActiveTrue(1L, 10L))
                 .thenReturn(Collections.singletonList(sub1));
 
         Notification notification = notification(NotificationImportance.NORMAL);
@@ -126,7 +131,7 @@ class WebPushSenderTest {
 
         when(pushService.send(any(nl.martijndwars.webpush.Notification.class))).thenReturn(response404);
 
-        webPushSender.sendPush(10L, 1L, "Title", "Content", "/test");
+        webPushSender.sendPush(10L, 1L, 10L, "Title", "Content", "/test");
 
         verify(pushSubscriptionRepository, times(1)).save(sub1);
         assertThat(sub1.isActive()).isFalse();
@@ -137,7 +142,7 @@ class WebPushSenderTest {
         PushSubscription sub1 = subscription(101L, "https://updates.push.services.mozilla.com/wpush/v2/sub1");
         PushSubscription sub2 = subscription(102L, "https://fcm.googleapis.com/fcm/send/sub2");
 
-        when(pushSubscriptionRepository.findByUserIdAndIsActiveTrue(1L))
+        when(pushSubscriptionRepository.findByUserIdAndApartmentIdAndIsActiveTrue(1L, 10L))
                 .thenReturn(Arrays.asList(sub1, sub2));
 
         Notification notification = notification(NotificationImportance.NORMAL);
@@ -153,7 +158,7 @@ class WebPushSenderTest {
                 .thenThrow(new IOException("Network Timeout"))
                 .thenReturn(response201);
 
-        webPushSender.sendPush(10L, 1L, "Title", "Content", "/test");
+        webPushSender.sendPush(10L, 1L, 10L, "Title", "Content", "/test");
 
         verify(pushService, times(2)).send(any(nl.martijndwars.webpush.Notification.class));
         

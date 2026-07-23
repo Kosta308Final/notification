@@ -45,12 +45,12 @@ public class DesktopDeviceController {
     @DeleteMapping("/desktop/{deviceId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deactivate(@PathVariable String deviceId, @CurrentUser JwtUserClaims claims) {
-        deviceService.deactivate(claims.userId(), deviceId);
+        deviceService.deactivate(claims.userId(), claims.apartmentId(), deviceId);
     }
 
     @PostMapping("/desktop/{deviceId}/heartbeat")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void heartbeat(@PathVariable String deviceId, @CurrentUser JwtUserClaims claims) {
-        deviceService.heartbeat(claims.userId(), deviceId);
+        deviceService.heartbeat(claims.userId(), claims.apartmentId(), deviceId);
     }
 }
