@@ -23,6 +23,8 @@ env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: threetier-notification
   ECR_REGISTRY: 341907318221.dkr.ecr.ap-northeast-2.amazonaws.com
+  BASTION_HOST: 13.209.157.207
+  NOTIFICATION_HOST: 10.0.188.182
 
 jobs:
   build-and-push:
@@ -84,3 +86,129 @@ jobs:
             ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Deploy notification through bastion
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Creating SSH key file..."
+
+          install -m 700 -d ~/.ssh
+
+          printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" \
+            | tr -d '\r' \
+            > ~/.ssh/3tier.pem
+
+          chmod 600 ~/.ssh/3tier.pem
+
+          if [ ! -s ~/.ssh/3tier.pem ]; then
+            echo "SSH_PRIVATE_KEY secret is empty."
+            exit 1
+          fi
+
+          echo "Connecting to notification EC2 through bastion..."
+
+          ssh -T \
+            -i ~/.ssh/3tier.pem \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o "ProxyCommand=ssh -i ~/.ssh/3tier.pem -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ubuntu@${BASTION_HOST}" \
+            ubuntu@${NOTIFICATION_HOST} 'bash -s' << 'REMOTE'
+          set -euo pipefail
+
+          AWS_REGION="ap-northeast-2"
+          ECR_REGISTRY="341907318221.dkr.ecr.ap-northeast-2.amazonaws.com"
+          IMAGE="${ECR_REGISTRY}/threetier-notification:latest"
+          CONTAINER_NAME="threetier-notification"
+          ENV_FILE="/home/ubuntu/threetier-notification.env"
+
+          if [ ! -s "${ENV_FILE}" ]; then
+            echo "Notification environment file is missing or empty."
+            exit 1
+          fi
+
+          echo "Logging in to Amazon ECR..."
+
+          aws ecr get-login-password --region "${AWS_REGION}" \
+            | docker login \
+                --username AWS \
+                --password-stdin "${ECR_REGISTRY}"
+
+          echo "Pulling latest notification image..."
+          docker pull "${IMAGE}"
+
+          OLD_IMAGE_ID="$(docker inspect \
+            --format '{{.Image}}' \
+            "${CONTAINER_NAME}" 2>/dev/null || true)"
+
+          echo "Stopping existing notification container..."
+          docker stop "${CONTAINER_NAME}" 2>/dev/null || true
+          docker rm "${CONTAINER_NAME}" 2>/dev/null || true
+
+          run_notification() {
+            docker run -d \
+              --name "${CONTAINER_NAME}" \
+              --restart unless-stopped \
+              --log-opt max-size=10m \
+              --log-opt max-file=3 \
+              --env-file "${ENV_FILE}" \
+              -p 8081:8081 \
+              "$1"
+          }
+
+          wait_for_notification() {
+            for i in $(seq 1 24); do
+              HTTP_STATUS="$(curl \
+                --silent \
+                --output /dev/null \
+                --write-out '%{http_code}' \
+                http://localhost:8081/ || true)"
+
+              if [ "${HTTP_STATUS}" = "200" ]; then
+                echo "Notification is ready. HTTP ${HTTP_STATUS}"
+                return 0
+              fi
+
+              echo "Attempt ${i}/24: notification is not ready. HTTP ${HTTP_STATUS}"
+              sleep 5
+            done
+
+            return 1
+          }
+
+          echo "Starting new notification container..."
+          run_notification "${IMAGE}"
+
+          if ! wait_for_notification; then
+            echo "New notification container failed to become ready."
+            docker ps -a --filter "name=${CONTAINER_NAME}"
+            docker logs --tail 100 "${CONTAINER_NAME}" || true
+            docker rm -f "${CONTAINER_NAME}" 2>/dev/null || true
+
+            if [ -n "${OLD_IMAGE_ID}" ]; then
+              echo "Rolling back to the previous notification image..."
+              run_notification "${OLD_IMAGE_ID}"
+
+              if wait_for_notification; then
+                echo "Notification rollback completed successfully."
+              else
+                echo "Notification rollback also failed."
+              fi
+            else
+              echo "Previous notification image was not found."
+            fi
+
+            exit 1
+          fi
+
+          echo "Notification deployment succeeded."
+          docker ps --filter "name=${CONTAINER_NAME}"
+
+          echo "Removing unused dangling Docker images..."
+          docker image prune --force
+
+          echo "Docker disk usage after cleanup:"
+          docker system df
+          REMOTE
