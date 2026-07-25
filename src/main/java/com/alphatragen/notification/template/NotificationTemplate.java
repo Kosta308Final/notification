@@ -108,6 +108,12 @@ public enum NotificationTemplate {
             "{noticeContent}",
             List.of("noticeTitle", "noticeContent")
     ),
+    MISSING_PERSON_DETECTED(
+            NotificationEventType.MISSING_PERSON_DETECTED,
+            "실종자 유사 인물 감지",
+            "{cameraName}에서 유사 인물이 감지되었습니다. 위치: {cameraAddress}",
+            List.of("missingPersonId", "detectionRequestId", "detailId", "cameraName", "cameraAddress")
+    ),
     OFFICE_MANUAL_SEND(
             NotificationEventType.OFFICE_MANUAL_SEND,
             "{title}",

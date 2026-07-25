@@ -21,6 +21,7 @@ public enum NotificationEventType {
     MAINTENANCE_FEE_OBJECTION_NO_ERROR("Objection completed with no error", NotificationImportance.NORMAL),
     MAINTENANCE_FEE_OBJECTION_CORRECTED("Objection completed with correction", NotificationImportance.NORMAL),
     NOTICE_CREATED("Notice created", NotificationImportance.URGENT),
+    MISSING_PERSON_DETECTED("Missing person detected", NotificationImportance.URGENT),
     USER_WITHDRAWN("User withdrawn", NotificationImportance.NORMAL),
     OFFICE_MANUAL_SEND("Office manual send", NotificationImportance.NORMAL);
 
