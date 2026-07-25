@@ -17,6 +17,9 @@ public enum NotificationEventType {
     VOTE_END_IMMINENT("Vote end imminent", NotificationImportance.NORMAL),
     VOTE_RESULT_PUBLISHED("Vote result published", NotificationImportance.NORMAL),
     MAINTENANCE_FEE_PAYMENT_CONFIRMED("Maintenance fee payment confirmed", NotificationImportance.NORMAL),
+    MAINTENANCE_FEE_NOTIFIED("Maintenance fee notified", NotificationImportance.NORMAL),
+    MAINTENANCE_FEE_OBJECTION_NO_ERROR("Objection completed with no error", NotificationImportance.NORMAL),
+    MAINTENANCE_FEE_OBJECTION_CORRECTED("Objection completed with correction", NotificationImportance.NORMAL),
     NOTICE_CREATED("Notice created", NotificationImportance.URGENT),
     USER_WITHDRAWN("User withdrawn", NotificationImportance.NORMAL),
     OFFICE_MANUAL_SEND("Office manual send", NotificationImportance.NORMAL);
