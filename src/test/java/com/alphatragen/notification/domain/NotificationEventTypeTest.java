@@ -25,6 +25,7 @@ class NotificationEventTypeTest {
     void testImportancePolicy() {
         assertEquals(NotificationImportance.NORMAL, NotificationEventType.COMPLAINT_STATUS_CHANGED.getDefaultImportance());
         assertEquals(NotificationImportance.URGENT, NotificationEventType.NOTICE_CREATED.getDefaultImportance());
+        assertEquals(NotificationImportance.URGENT, NotificationEventType.MISSING_PERSON_DETECTED.getDefaultImportance());
         assertEquals(NotificationImportance.NORMAL, NotificationEventType.MAINTENANCE_FEE_PAYMENT_CONFIRMED.getDefaultImportance());
         assertEquals(NotificationImportance.NORMAL, NotificationEventType.OFFICE_MANUAL_SEND.getDefaultImportance());
     }

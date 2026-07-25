@@ -81,6 +81,23 @@ class NotificationTemplateServiceTest {
     }
 
     @Test
+    void generateMissingPersonDetectedTemplate() {
+        TemplateResult result = templateService.generate(
+                NotificationEventType.MISSING_PERSON_DETECTED,
+                Map.of(
+                        "missingPersonId", "101",
+                        "detectionRequestId", "det-20260725-0001",
+                        "detailId", "1",
+                        "cameraName", "정문 앞 CCTV",
+                        "cameraAddress", "서울시 강남구 예시로 101, 아파트 정문"
+                )
+        );
+
+        assertEquals("실종자 유사 인물 감지", result.getTitle());
+        assertEquals("정문 앞 CCTV에서 유사 인물이 감지되었습니다. 위치: 서울시 강남구 예시로 101, 아파트 정문", result.getContent());
+    }
+
+    @Test
     void generateThrowsExceptionWhenEventTypeIsNull() {
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,

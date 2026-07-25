@@ -168,6 +168,44 @@ public class NotificationEventConsumerTest {
     }
 
     @Test
+    void testConsumeMissingPersonDetectedEventFromBackendShape() {
+        String message = """
+                {
+                  "eventId": "%s",
+                  "eventType": "MISSING_PERSON_DETECTED",
+                  "occurredAt": "2026-07-25T14:31:12+09:00",
+                  "sourceService": "apartment-service",
+                  "apartmentId": 1,
+                  "recipient": {
+                    "type": "INDIVIDUAL",
+                    "userId": 2001
+                  },
+                  "templateData": {
+                    "missingPersonId": 101,
+                    "detectionRequestId": "det-20260725-0001",
+                    "detailId": 1,
+                    "cameraName": "정문 앞 CCTV",
+                    "cameraAddress": "서울시 강남구 예시로 101, 아파트 정문",
+                    "imageUrl": "/mock/missing-person/gate-front-001.jpg"
+                  },
+                  "actionUrl": "/missing-person/detections/1",
+                  "urgent": true
+                }
+                """.formatted(UUID.randomUUID());
+
+        kafkaTemplate.send("notification-events", message);
+
+        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+            Optional<Notification> opt = notificationRepository.findAll().stream()
+                    .filter(notification -> "/missing-person/detections/1".equals(notification.getActionUrl()))
+                    .findFirst();
+            assertThat(opt).isPresent();
+            assertThat(opt.get().getTitle()).isEqualTo("실종자 유사 인물 감지");
+            assertThat(opt.get().getContent()).contains("정문 앞 CCTV").contains("아파트 정문");
+        });
+    }
+
+    @Test
     void testRetryPolicy_MaxThreeAttempts() throws Exception {
         String eventId = UUID.randomUUID().toString();
         NotificationEventDto dto = new NotificationEventDto(
