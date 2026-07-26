@@ -43,5 +43,4 @@ docs/
 # Local secrets and certificates
 .env
 certs/
-
 WORK_LOG.md

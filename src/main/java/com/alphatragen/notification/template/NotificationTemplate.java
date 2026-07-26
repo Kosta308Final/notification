@@ -84,6 +84,24 @@ public enum NotificationTemplate {
             "{billingMonth} maintenance fee payment of {paidAmount} has been confirmed.",
             List.of("maintenanceFeeId", "householdId", "billingMonth", "paidAmount", "paidAt")
     ),
+    MAINTENANCE_FEE_NOTIFIED(
+        NotificationEventType.MAINTENANCE_FEE_NOTIFIED,
+        "관리비 고지 안내",
+        "{billingMonth} 관리비 {totalAmount}이(가) 고지되었습니다. 납부기한: {dueDate}까지",
+        List.of("maintenanceFeeId", "billingMonth", "totalAmount", "dueDate")
+    ),
+    OBJECTION_NO_ERROR(
+        NotificationEventType.MAINTENANCE_FEE_OBJECTION_NO_ERROR,
+        "이의신청 처리결과: 오류없음",
+        "{billingMonth} 관리비 이의신청이 검토되었습니다. 처리결과: {reviewResult}",
+        List.of("objectionId", "billingMonth", "reviewResult")
+    ),
+    OBJECTION_CORRECTED(
+        NotificationEventType.MAINTENANCE_FEE_OBJECTION_CORRECTED,
+        "이의신청 처리결과: 정정반영",
+        "{billingMonth} 관리비 이의신청이 검토되어 {adjustmentAmount}원이 정정 반영됩니다. {reviewResult}",
+        List.of("objectionId", "billingMonth", "adjustmentAmount", "reviewResult")
+    ),
     NOTICE_CREATED(
             NotificationEventType.NOTICE_CREATED,
             "[Urgent] {noticeTitle}",
